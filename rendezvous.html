@@ -143,8 +143,11 @@
                     </div>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label" for="date">Date souhaitée *</label>
+                            <label class="form-label" for="date">Date souhaitée * <small style="color:var(--or);font-weight:600">(Mar–Sam uniquement)</small></label>
                             <input type="date" id="date" name="date" class="form-control" required>
+                            <p id="date-error" style="display:none;color:#c0392b;font-size:.82rem;margin-top:.4rem">
+                                <i class="fas fa-exclamation-circle"></i> Le salon est fermé le Dimanche et le Lundi. Veuillez choisir un jour entre Mardi et Samedi.
+                            </p>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="heure">Heure souhaitée</label>
@@ -341,6 +344,81 @@
         el.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
         el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         if (type === 'success') setTimeout(() => el.remove(), 6000);
+      }
+    })();
+    </script>
+    <script>
+    /* ── Date picker RDV : jours ouvrés seulement (Mar→Sam) ────── */
+    (function () {
+      var dateInput = document.getElementById('date');
+      var dateError = document.getElementById('date-error');
+      var form      = document.getElementById('rdvForm');
+      if (!dateInput) return;
+
+      /* Formate une date en YYYY-MM-DD (timezone locale) */
+      function toLocalISO(d) {
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var j = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + j;
+      }
+
+      /* Calcule les bornes min/max en excluant Dim et Lun */
+      function calcBounds() {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        /* Min = aujourd'hui (ou demain si déjà 18h) */
+        var minDate = new Date(today);
+        if (new Date().getHours() >= 18) minDate.setDate(minDate.getDate() + 1);
+
+        /* Avancer min si c'est un Dim(0) ou Lun(1) */
+        while (minDate.getDay() === 0 || minDate.getDay() === 1) {
+          minDate.setDate(minDate.getDate() + 1);
+        }
+
+        /* Max = chercher les 7 jours ouvrés suivants à partir de min */
+        var maxDate = new Date(minDate);
+        var counted = 0;
+        while (counted < 6) {          /* 7 jours ouvrés = 1 départ + 6 de plus */
+          maxDate.setDate(maxDate.getDate() + 1);
+          if (maxDate.getDay() !== 0 && maxDate.getDay() !== 1) counted++;
+        }
+
+        dateInput.min = toLocalISO(minDate);
+        dateInput.max = toLocalISO(maxDate);
+      }
+
+      calcBounds();
+
+      /* Validation en temps réel */
+      function validateDate() {
+        if (!dateInput.value) { dateError.style.display = 'none'; return true; }
+        var d   = new Date(dateInput.value + 'T00:00:00');
+        var day = d.getDay(); /* 0=Dim, 1=Lun */
+
+        if (day === 0 || day === 1) {
+          dateError.style.display = 'block';
+          dateInput.setCustomValidity('Jour invalide');
+          return false;
+        }
+        dateError.style.display = 'none';
+        dateInput.setCustomValidity('');
+        return true;
+      }
+
+      dateInput.addEventListener('change', validateDate);
+      dateInput.addEventListener('input',  validateDate);
+
+      /* Bloquer la soumission si jour invalide */
+      if (form) {
+        form.addEventListener('submit', function (e) {
+          if (!validateDate()) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            dateInput.focus();
+          }
+        }, true /* capture phase → avant le handler Supabase */);
       }
     })();
     </script>
