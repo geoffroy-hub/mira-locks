@@ -384,11 +384,37 @@ Je souhaite prendre rendez-vous.
   });
 }
 
-// Theme initialization logic
-(function () {
-  const theme = localStorage.getItem('Miralocks_theme') || 'light';
-  document.documentElement.dataset.theme = theme;
-})();
+// ── Theme ────────────────────────────────────────────────────────
+// Injection rapide déjà faite dans le <head> de chaque page HTML.
+// Ici on branche le bouton toggle et on met à jour l'icône.
+function initTheme() {
+  const toggleBtn = document.getElementById('theme-toggle');
+  const html = document.documentElement;
+
+  const updateIcon = (theme) => {
+    if (!toggleBtn) return;
+    const icon = toggleBtn.querySelector('i');
+    if (!icon) return;
+    if (theme === 'dark') {
+      icon.className = 'fas fa-sun';
+    } else {
+      icon.className = 'fas fa-moon';
+    }
+  };
+
+  // Synchroniser l'icône avec le thème actuel
+  updateIcon(html.dataset.theme || 'light');
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      const newTheme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+      html.dataset.theme = newTheme;
+      localStorage.setItem('Miralocks_theme', newTheme);
+      updateIcon(newTheme);
+    });
+  }
+}
+document.addEventListener('DOMContentLoaded', initTheme);
 
 // ── Accès Admin secret ────────────────────────────────────────────
 // Desktop  : Ctrl + Shift + A
