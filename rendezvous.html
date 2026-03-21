@@ -25,6 +25,9 @@
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         crossorigin="anonymous">
+    <!-- Flatpickr (Calendrier personnalisé) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_green.css">
     <link rel="stylesheet" href="css/styles.css">
 
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
@@ -269,6 +272,9 @@
         </div>
     </footer>
     <script src="js/supabase.js"></script>
+    <!-- Flatpickr (Calendrier personnalisé) -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
     <script src="js/main.js" defer></script>
     <script src="js/register-sw.js" defer></script>
     <script>
@@ -277,33 +283,23 @@
             const form = document.getElementById('rdvForm');
             if (!form) return;
 
-            /* ── Initialisation des limites de date (Aujourd'hui -> +7 jours) ── */
-            const dateInput = form.querySelector('#date');
-            if (dateInput) {
-                const now = new Date();
-                const formatDate = (d) => {
-                    const y = d.getFullYear();
-                    const m = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
-                    return `${y}-${m}-${day}`;
-                };
-
-                dateInput.min = formatDate(now);
-                
-                const maxDate = new Date();
-                maxDate.setDate(now.getDate() + 7);
-                dateInput.max = formatDate(maxDate);
-
-                // Validation instantanée lors du changement (pour iPhone/Android)
-                dateInput.addEventListener('change', function() {
-                    const selected = new Date(this.value);
-                    const day = selected.getUTCDay();
-                    if (day === 0 || day === 1) {
-                        showRdvFeedback('Le salon est fermé le dimanche et le lundi.', 'error');
-                        this.value = ''; // Réinitialise
+            /* ── Initialisation de Flatpickr (Calendrier personnalisé) ── */
+            const picker = flatpickr("#date", {
+                locale: "fr",
+                minDate: "today",
+                maxDate: new Date().fp_incr(7), // 1 semaine de limite
+                disable: [
+                    function(date) {
+                        // 0: Dimanche, 1: Lundi
+                        return (date.getDay() === 0 || date.getDay() === 1);
                     }
-                });
-            }
+                ],
+                disableMobile: true, // Force Flatpickr même sur iPhone/Android pour bloquer les jours
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "D j F", // Ex: "Mar 25 Mars"
+                placeholder: "Choisir une date…"
+            });
 
             form.addEventListener('submit', async function (e) {
                 e.preventDefault();
@@ -314,14 +310,6 @@
                 /* Validation de base */
                 if (!data.nom?.trim() || !data.tel?.trim() || !data.service || !data.date) {
                     showRdvFeedback('Veuillez remplir tous les champs obligatoires (*).', 'error');
-                    return;
-                }
-
-                /* Validation des jours de fermeture (Fermé Dimanche=0 et Lundi=1) */
-                const selectedDate = new Date(data.date);
-                const day = selectedDate.getUTCDay(); // UTC car input date est YYYY-MM-DD
-                if (day === 0 || day === 1) {
-                    showRdvFeedback('Désolé, le salon est fermé le dimanche et le lundi.', 'error');
                     return;
                 }
 
