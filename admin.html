@@ -1437,6 +1437,7 @@ const toast = (msg, type='success') => {
   clearTimeout(t._timer);
   t._timer = setTimeout(() => t.className = '', 3200);
 };
+const showToast = toast; // Alias pour compatibilité
 const openModal  = name => document.getElementById(`modal-${name}`).classList.add('open');
 const closeModal = name => document.getElementById(`modal-${name}`).classList.remove('open');
 const setLoading = (id, on) => {
@@ -1548,9 +1549,14 @@ function showAdmin() {
   }, 180);
 }
 
-// Auto-login si session valide
-window.addEventListener('DOMContentLoaded', () => {
-  if (sb.isAdmin()) showAdmin();
+// Auto-login si session valide (attend le rafraîchissement si nécessaire)
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const s = await sb.getValidSession();
+    if (s) showAdmin();
+  } catch (e) {
+    console.warn('[Admin] Session invalide ou expirée');
+  }
 });
 
 /* ── NAVIGATION ──────────────────────────────────────────── */
@@ -1848,7 +1854,7 @@ async function loadBlog() {
       <thead><tr><th>Photo</th><th>Titre</th><th>Catégorie</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
       <tbody>${posts.map(p => `
         <tr>
-          <td>${p.photo_url ? `<img src="${p.photo_url}" class="table-thumb" loading="lazy">` : '<div style="width:56px;height:56px;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-image" style="color:#ccc"></i></div>'}</td>
+          <td>${p.photo_url ? `<img src="${p.photo_url}" class="table-thumb" width="56" height="56" loading="lazy">` : '<div style="width:56px;height:56px;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-image" style="color:#ccc"></i></div>'}</td>
           <td><strong>${p.titre}</strong><br><small style="color:var(--gris-d)">${(p.extrait||'').slice(0,60)}…</small></td>
           <td><span class="badge badge-warning">${p.categorie||'—'}</span></td>
           <td><span class="badge ${p.publie?'badge-success':'badge-danger'}">${p.publie?'Publié':'Brouillon'}</span></td>
@@ -1956,7 +1962,7 @@ async function loadGalerie() {
       <thead><tr><th>Photo</th><th>Titre</th><th>Catégorie</th><th>Statut</th><th>Actions</th></tr></thead>
       <tbody>${photos.map(p => `
         <tr>
-          <td><img src="${p.photo_url}" class="table-thumb" loading="lazy"></td>
+          <td><img src="${p.photo_url}" class="table-thumb" width="56" height="56" loading="lazy"></td>
           <td>${p.titre||'—'}</td>
           <td><span class="badge badge-warning">${p.categorie||'—'}</span></td>
           <td><span class="badge ${p.publie?'badge-success':'badge-danger'}">${p.publie?'Publié':'Masqué'}</span></td>
@@ -2036,7 +2042,7 @@ async function loadVideos() {
       <tbody>${vids.map(v => `
         <tr>
           <td>${v.thumbnail_url
-            ? `<img src="${v.thumbnail_url}" class="table-thumb" loading="lazy">`
+            ? `<img src="${v.thumbnail_url}" class="table-thumb" width="56" height="56" loading="lazy">`
             : `<div style="width:56px;height:56px;background:#111;border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-video" style="color:#555"></i></div>`}</td>
           <td><strong>${v.titre}</strong><br><small style="color:var(--gris-d)">${(v.description||'').slice(0,60)}</small></td>
           <td><span class="badge ${v.publie?'badge-success':'badge-danger'}">${v.publie?'Publié':'Masqué'}</span></td>
@@ -2136,9 +2142,9 @@ async function loadAvis(onlyApproved) {
       <thead><tr><th>Client</th><th>Note</th><th>Avis</th><th>Date</th><th>Actions</th></tr></thead>
       <tbody>${list.map(a => `
         <tr>
-          <td><strong>${a.nom}</strong><br><small>${a.localite||''}</small></td>
+          <td><strong>${escHtml(a.nom)}</strong><br><small>${escHtml(a.localite||'')}</small></td>
           <td><span class="stars">${'★'.repeat(a.etoiles||5)}${'☆'.repeat(5-(a.etoiles||5))}</span></td>
-          <td style="max-width:280px"><em style="font-size:.88rem;color:var(--gris-d)">"${(a.texte||'').slice(0,120)}…"</em></td>
+          <td style="max-width:280px"><em style="font-size:.88rem;color:var(--gris-d)">"${escHtml((a.texte||'').slice(0,120))}…"</em></td>
           <td style="white-space:nowrap">${new Date(a.created_at).toLocaleDateString('fr')}</td>
           <td><div class="table-actions">
             ${!a.approuve ? `<button class="btn btn-sm btn-success btn-icon" onclick="approveAvis(${a.id})" title="Approuver"><i class="fas fa-check"></i></button>` : ''}
@@ -2175,7 +2181,7 @@ async function saveAvisAdmin() {
   setLoading('avis-admin-save-btn', true);
   try {
     // Insertion directe avec token admin (contourne le INSERT public)
-    const s = sb.getSession();
+    const s = await sb.getValidSession();
     const r = await fetch(`${SUPABASE_URL}/rest/v1/avis_clients`, {
       method:  'POST',
       headers: {

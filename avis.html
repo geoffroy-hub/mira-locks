@@ -8,16 +8,13 @@
   <title>Avis Clients | Miralocks Lomé</title>
   <meta name="description" content="Découvrez les témoignages des clientes de Miralocks à Lomé. Votre avis compte pour nous !">
   <meta name="robots" content="index, follow">
-  <meta property="og:title" content="Avis Clients | Miralocks Lomé">
-  <meta property="og:description" content="Découvrez les témoignages des clientes de Miralocks à Lomé. Votre avis compte pour nous !">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="fr_TG">
   <meta name="geo.region" content="TG">
   <meta name="geo.placename" content="Lomé, Togo">
-  <link rel="canonical" href="https://miralocks.com/avis.html">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://mspgaewvgbaotclnhjvw.supabase.co">
+  <link rel="preconnect" href="https://tkofwdmdnufbafrwwubr.supabase.co">
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap">
@@ -35,15 +32,7 @@
     var __theme = localStorage.getItem('Miralocks_theme') || 'light';
     document.documentElement.dataset.theme = __theme;
   </script>
-  <!-- Open Graph / WhatsApp preview -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Miralocks">
-  <meta property="og:image" content="https://miralocks.com/assets/og-image.jpg">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:type" content="image/jpeg">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://miralocks.com/assets/og-image.jpg">
   <script src="js/seo-meta.js"></script>
 </head>
 
@@ -84,7 +73,6 @@
     </div>
   </nav>
   <div class="page-pad"></div>
-
 
   <div class="page-hero" id="main">
     <h1 class="fade-in">Témoignages</h1>
@@ -221,7 +209,7 @@
     }
     stars.forEach(s => {
       s.addEventListener('click', () => setRating(+s.dataset.v));
-      s.addEventListener('mouseenter', () => stars.forEach((x, i) => x.style.color = i < +x.dataset.v ? 'var(--or)' : '#ddd'));
+      s.addEventListener('mouseenter', () => stars.forEach((x, i) => x.style.color = i < +s.dataset.v ? 'var(--or)' : '#ddd'));
     });
     document.getElementById('star-picker').addEventListener('mouseleave', () => setRating(rating));
 
@@ -267,6 +255,7 @@
       if (texte.length < 10) { errMsg.textContent = 'Votre avis doit faire au moins 10 caractères.'; err.style.display = 'block'; return; }
 
       btn.disabled = true;
+      let _success = false;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours…';
 
       try {
@@ -282,6 +271,7 @@
         localStorage.setItem('ml_avis_history', JSON.stringify(history));
 
         ok.style.display = 'block';
+        _success = true;
         // Réinitialiser
         document.getElementById('avis-nom').value = '';
         document.getElementById('avis-localite').value = '';
@@ -291,11 +281,12 @@
         // Scroll vers le message de succès
         ok.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } catch (e) {
-        errMsg.textContent = 'Erreur : ' + e.message + ' — Vérifiez que la table avis_clients existe dans Supabase.';
+        errMsg.textContent = "Une erreur est survenue lors de l'envoi. Veuillez réessayer ou nous contacter directement.";
+        console.warn('Avis submit error:', e.message);
         err.style.display = 'block';
       } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer mon avis';
+        if (!_success) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer mon avis'; }
+        else { btn.innerHTML = '<i class="fas fa-check"></i> Avis envoyé'; }
       }
     }
 

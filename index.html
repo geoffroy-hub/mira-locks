@@ -9,18 +9,14 @@
   <meta name="description"
     content="Miralocks, spécialiste en création, entretien et transformation de dreadlocks à Lomé, Togo. Beauté naturelle, expertise et passion.">
   <meta name="robots" content="index, follow">
-  <meta property="og:title" content="Miralocks | Spécialiste Locks à Lomé, Togo">
-  <meta property="og:description"
-    content="Miralocks, spécialiste en création, entretien et transformation de dreadlocks à Lomé, Togo. Beauté naturelle, expertise et passion.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://miralocks.com/">
   <meta property="og:locale" content="fr_TG">
   <meta name="geo.region" content="TG">
   <meta name="geo.placename" content="Lomé, Togo">
-  <link rel="canonical" href="https://miralocks.com/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://mspgaewvgbaotclnhjvw.supabase.co">
+  <link rel="preconnect" href="https://tkofwdmdnufbafrwwubr.supabase.co">
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
   <!-- Optimisation du rendu (Preload CSS externes) -->
   <link rel="preload"
@@ -50,16 +46,7 @@
     var __theme = localStorage.getItem('Miralocks_theme') || 'light';
     document.documentElement.dataset.theme = __theme;
   </script>
-  <!-- Open Graph / WhatsApp preview -->
   <!-- og:type et og:url déjà définis plus haut, pas de doublon -->
-  <meta property="og:site_name" content="Miralocks">
-  <meta property="og:image" content="https://miralocks.com/assets/og-image.jpg">
-  <meta property="og:image:secure_url" content="https://miralocks.com/assets/og-image.jpg">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:type" content="image/jpeg">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://miralocks.com/assets/og-image.jpg">
   <script src="js/seo-meta.js"></script>
 </head>
 
@@ -164,8 +151,8 @@
         <div class="gallery-item fade-in">
           <picture>
             <source srcset="images/locks2.webp" type="image/webp">
-            <img src="images/locks2.jpg" alt="Création locks 2 — Miralocks" loading="eager" decoding="sync" width="400"
-              height="533" fetchpriority="high" class="card-img">
+            <img src="images/locks2.jpg" alt="Création locks 2 — Miralocks" loading="lazy" decoding="async" width="400"
+              height="533" class="card-img">
           </picture>
           <div class="gallery-overlay"><span class="gallery-overlay-text">Voir en grand</span></div>
         </div>
@@ -500,6 +487,31 @@
       </div>
     </div>
   </footer>
+  <script src="js/supabase.js"></script>
+  <script>
+    (async function () {
+      try {
+        var photos = await sb.galerie.list(true);
+        if (!photos || !photos.length) return;
+        var grid = document.getElementById('gallery-grid-home');
+        if (!grid) return;
+        // NE PAS effacer les photos statiques — ajouter les photos Supabase en bas
+        photos.slice(0, 6).forEach(function(p) {
+          var div = document.createElement('div');
+          div.className = 'gallery-item fade-in visible';
+          var img = document.createElement('img');
+          img.src = p.photo_url;
+          img.alt = p.titre || 'Creation Miralocks';
+          img.loading = 'lazy'; img.decoding = 'async';
+          img.width = 400; img.height = 533; img.className = 'card-img';
+          var overlay = document.createElement('div');
+          overlay.className = 'gallery-overlay';
+          overlay.innerHTML = '<span class="gallery-overlay-text">Voir en grand</span>';
+          div.appendChild(img); div.appendChild(overlay); grid.appendChild(div);
+        });
+      } catch (e) {}
+    })();
+  </script>
   <script src="js/main.js" defer></script>
   <script src="js/register-sw.js" defer></script>
 

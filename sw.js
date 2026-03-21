@@ -4,7 +4,7 @@
    Offline : redirection automatique vers offline.html
    ============================================================ */
 
-const CACHE_V = 'Miralocks-v9'; // Mode Hors-ligne strict — backend RDV + avis dynamiques
+const CACHE_V = 'Miralocks-v14'; // stale-while-revalidate HTML
 const STATIC = [
   '/offline.html',
   '/css/styles.css',
@@ -60,9 +60,18 @@ self.addEventListener('fetch', e => {
       return;
     }
 
-    // Mode Network-Only pour tout le HTML avec fallback très strict sur la page d'erreur
+    // Stale-While-Revalidate : sert le cache immédiatement, revalide en arrière-plan
     e.respondWith(
-      fetch(e.request).catch(() => caches.match('/offline.html'))
+      caches.open(CACHE_V).then(cache =>
+        cache.match(e.request).then(cached => {
+          const networkFetch = fetch(e.request).then(res => {
+            if (res.ok) cache.put(e.request, res.clone());
+            return res;
+          }).catch(() => cached || caches.match('/offline.html'));
+          // Retourner le cache immédiatement si disponible, sinon attendre le réseau
+          return cached || networkFetch;
+        })
+      )
     );
     return;
   }

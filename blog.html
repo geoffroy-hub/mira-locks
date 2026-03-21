@@ -9,17 +9,13 @@
     <meta name="description"
         content="Conseils, astuces et actualités sur les locks et les cheveux naturels. Blog de Miralocks, Lomé, Togo.">
     <meta name="robots" content="index, follow">
-    <meta property="og:title" content="Blog | Miralocks Lomé">
-    <meta property="og:description"
-        content="Conseils, astuces et actualités sur les locks et les cheveux naturels. Blog de Miralocks, Lomé, Togo.">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_TG">
     <meta name="geo.region" content="TG">
     <meta name="geo.placename" content="Lomé, Togo">
-    <link rel="canonical" href="https://miralocks.com/blog.html">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://mspgaewvgbaotclnhjvw.supabase.co">
+    <link rel="preconnect" href="https://tkofwdmdnufbafrwwubr.supabase.co">
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap">
@@ -37,15 +33,7 @@
     var __theme = localStorage.getItem('Miralocks_theme') || 'light';
     document.documentElement.dataset.theme = __theme;
     </script>
-    <!-- Open Graph / WhatsApp preview -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Miralocks">
-    <meta property="og:image" content="https://miralocks.com/assets/og-image.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://miralocks.com/assets/og-image.jpg">
     <script src="js/seo-meta.js"></script>
 </head>
 
@@ -86,7 +74,6 @@
         </div>
     </nav>
     <div class="page-pad"></div>
-
 
     <div class="page-hero" id="main">
         <h1 class="fade-in">Notre Blog</h1>
@@ -167,6 +154,7 @@
                 const posts = await sb.blog.list(true);
                 if (!posts || !posts.length) return;
                 const grid = document.getElementById('blog-grid');
+                grid.innerHTML = ''; // Remplacer les articles statiques par les données Supabase
                 const fmt = d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
                 const cards = posts.map(p => {
                     const div = document.createElement('article');

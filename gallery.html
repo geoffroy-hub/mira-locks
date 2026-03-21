@@ -9,17 +9,13 @@
     <meta name="description"
         content="Galerie photos de créations, entretiens et transformations de locks à Miralocks de Lomé, Togo.">
     <meta name="robots" content="index, follow">
-    <meta property="og:title" content="Galerie Photos | Miralocks Lomé">
-    <meta property="og:description"
-        content="Galerie photos de créations, entretiens et transformations de locks à Miralocks de Lomé, Togo.">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_TG">
     <meta name="geo.region" content="TG">
     <meta name="geo.placename" content="Lomé, Togo">
-    <link rel="canonical" href="https://miralocks.com/gallery.html">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://mspgaewvgbaotclnhjvw.supabase.co">
+    <link rel="preconnect" href="https://tkofwdmdnufbafrwwubr.supabase.co">
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&display=swap">
@@ -42,19 +38,11 @@
         }
     </style>
     <script>document.addEventListener("DOMContentLoaded", function () { document.documentElement.classList.add("ready") });</script>
-    <!-- Open Graph / WhatsApp preview -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Miralocks">
-    <meta property="og:image" content="https://miralocks.com/assets/og-image.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://miralocks.com/assets/og-image.jpg">
-    <script src="js/seo-meta.js" defer></script>
+    <script src="js/seo-meta.js"></script>
 </head>
 
-<body>
+<body data-lightbox-managed="true">
     <a href="#main" class="skip-link">Aller au contenu</a>
     <div id="page-loader" role="status" aria-label="Chargement">
         <div class="loader-logo"></div>
@@ -91,7 +79,6 @@
         </div>
     </nav>
     <div class="page-pad"></div>
-
 
     <div class="page-hero" id="main">
         <h1 class="fade-in">Notre Galerie</h1>
@@ -173,30 +160,23 @@
             const lightbox = document.getElementById('lightbox');
             if (!lightbox) return;
             const lbImg = lightbox.querySelector('.lightbox-img');
+            const lbVideoWrap = lightbox.querySelector('.lightbox-video-wrap');
             if (!lbImg) return;
             let current = 0;
-
-            // Nettoyer et recloner les boutons pour supprimer les anciens listeners
-            const lbPrev = lightbox.querySelector('.lightbox-prev');
-            const lbNext = lightbox.querySelector('.lightbox-next');
-            const lbClose = lightbox.querySelector('.lightbox-close');
-            const lbPrev2 = lbPrev.cloneNode(true);
-            const lbNext2 = lbNext.cloneNode(true);
-            const lbClose2 = lbClose.cloneNode(true);
-            lbPrev.parentNode.replaceChild(lbPrev2, lbPrev);
-            lbNext.parentNode.replaceChild(lbNext2, lbNext);
-            lbClose.parentNode.replaceChild(lbClose2, lbClose);
 
             const openLightbox = (index) => {
                 current = index;
                 lbImg.src = photoItems[current].src;
                 lbImg.alt = photoItems[current].alt || '';
+                lbImg.style.display = 'block';
+                if (lbVideoWrap) lbVideoWrap.style.display = 'none';
                 lightbox.classList.add('open');
                 document.body.style.overflow = 'hidden';
             };
             const closeLightbox = () => {
                 lightbox.classList.remove('open');
                 document.body.style.overflow = '';
+                if (lbVideoWrap) lbVideoWrap.innerHTML = ''; // Arrêter la vidéo
             };
             const navigate = (dir) => {
                 current = (current + dir + photoItems.length) % photoItems.length;
@@ -208,12 +188,12 @@
                 }, 180);
             };
 
-            lbClose2.addEventListener('click', closeLightbox);
-            lbPrev2.addEventListener('click', () => navigate(-1));
-            lbNext2.addEventListener('click', () => navigate(1));
+            // Attacher les événements une seule fois (pas de cloneNode nécessaire ici avec cette logique)
+            lightbox.querySelector('.lightbox-close').onclick = closeLightbox;
+            lightbox.querySelector('.lightbox-prev').onclick = (e) => { e.stopPropagation(); navigate(-1); };
+            lightbox.querySelector('.lightbox-next').onclick = (e) => { e.stopPropagation(); navigate(1); };
             lightbox.onclick = e => { if (e.target === lightbox) closeLightbox(); };
 
-            // Attacher les clics sur tous les items photo
             photoItems.forEach((item, i) => {
                 item.el.onclick = () => openLightbox(i);
             });
@@ -225,6 +205,7 @@
                 const photos = await sb.galerie.list(true);
                 if (photos && photos.length) {
                     const grid = document.getElementById('gallery-grid');
+                    // NE PAS effacer les photos statiques — ajouter les photos Supabase en bas
                     photos.forEach(p => {
                         const div = document.createElement('div');
                         div.className = 'gallery-item fade-in visible';
@@ -233,6 +214,9 @@
                         img.alt = p.titre || 'Photo Miralocks';
                         img.loading = 'lazy';
                         img.decoding = 'async';
+                        // Réservation d'espace (Ratio 3:4 typique pour vos photos)
+                        img.width = 400;
+                        img.height = 533;
                         const overlay = document.createElement('div');
                         overlay.className = 'gallery-overlay';
                         overlay.innerHTML = `<span class="gallery-overlay-text"><i class="fas fa-search-plus"></i> Agrandir</span>${p.titre ? `<p style="color:#fff;font-size:.8rem;margin-top:.3rem">${p.titre}</p>` : ''}`;
@@ -291,29 +275,36 @@
             }
         }
 
-        /* ── Lecteur vidéo simple ── */
+        /* ── Lecteur vidéo amélioré ── */
         function playVideo(url, titre) {
             const lb = document.getElementById('lightbox');
             if (!lb) return;
-            lb.innerHTML = `
-    <button class="lightbox-close" onclick="document.getElementById('lightbox').classList.remove('open');document.body.style.overflow=''" style="position:fixed;top:1rem;right:1rem;width:46px;height:46px;background:rgba(255,255,255,.18);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.25rem;color:#fff;border:none;z-index:100000">✕</button>
-    <div style="width:min(95vw,800px);padding:0 .5rem">
-      <p style="color:var(--or);text-align:center;margin-bottom:1rem;font-weight:600;font-size:clamp(.85rem,2.5vw,1.1rem)">${titre}</p>
-      <video src="${url}" controls autoplay playsinline style="width:100%;border-radius:8px;max-height:75vh"></video>
-    </div>`;
+            const lbImg = lb.querySelector('.lightbox-img');
+            const lbVideoWrap = lb.querySelector('.lightbox-video-wrap');
+
+            if (lbImg) lbImg.style.display = 'none';
+            lb.querySelectorAll('.lightbox-prev, .lightbox-next').forEach(b => b.style.display = 'none');
+
+            lbVideoWrap.style.display = 'block';
+            lbVideoWrap.innerHTML = `
+                <div style="width:min(95vw,800px); padding:0 .5rem">
+                    <p style="color:var(--or); text-align:center; margin-bottom:1rem; font-weight:600; font-size:clamp(.85rem,2.5vw,1.1rem)">${titre}</p>
+                    <video src="${url}" controls autoplay playsinline style="width:100%; border-radius:8px; max-height:75vh"></video>
+                </div>`;
+
             lb.classList.add('open');
             document.body.style.overflow = 'hidden';
-            lb.onclick = e => { if (e.target === lb) { lb.classList.remove('open'); document.body.style.overflow = ''; } };
         }
 
         document.addEventListener('DOMContentLoaded', function () { loadGaleriePublic(); });
         document.addEventListener('DOMContentLoaded', function () { loadVideosPublic(); });
     </script>
 
-    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Galerie photo">
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Galerie">
         <button class="lightbox-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
         <button class="lightbox-prev" aria-label="Précédent"><i class="fas fa-chevron-left"></i></button>
         <img class="lightbox-img" src="" alt="" loading="lazy">
+        <div class="lightbox-video-wrap" style="display:none; width:100%; display:flex; justify-content:center; align-items:center;"></div>
         <button class="lightbox-next" aria-label="Suivant"><i class="fas fa-chevron-right"></i></button>
     </div>
 

@@ -33,9 +33,9 @@
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
     <script>
-        // Bugfix 2 : Injection thématique native propre
-    var __theme = localStorage.getItem('Miralocks_theme') || 'light';
-    document.documentElement.dataset.theme = __theme;
+        // Critical: masquer FOUC
+        document.documentElement.style.visibility = 'hidden';
+        window.addEventListener('DOMContentLoaded', () => document.documentElement.style.visibility = '');
     </script>
     <!-- Open Graph / WhatsApp preview -->
     <meta property="og:type" content="website">
@@ -143,11 +143,8 @@
                     </div>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label" for="date">Date souhaitée * <small style="color:var(--or);font-weight:600">(Mar–Sam uniquement)</small></label>
+                            <label class="form-label" for="date">Date souhaitée *</label>
                             <input type="date" id="date" name="date" class="form-control" required>
-                            <p id="date-error" style="display:none;color:#c0392b;font-size:.82rem;margin-top:.4rem">
-                                <i class="fas fa-exclamation-circle"></i> Le salon est fermé le Dimanche et le Lundi. Veuillez choisir un jour entre Mardi et Samedi.
-                            </p>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="heure">Heure souhaitée</label>
@@ -249,7 +246,7 @@
             <div>
                 <h3 class="footer-heading">Contact</h3>
                 <ul class="footer-links">
-                    <li><i class="fas fa-phone" style="color:var(--or);width:18px"></i> <a href="tel:+22897989001" style="color:inherit;text-decoration:none;">+228 97 98 90 01</a></li>
+                    <li><i class="fas fa-phone" style="color:var(--or);width:18px"></i> +228 97 98 90 01</li>
                     <li><i class="fas fa-map-marker-alt" style="color:var(--or);width:18px"></i> Agoè Cacaveli, Lomé
                     </li>
                     <li style="margin-top:1rem"><a href="rendezvous.html" class="btn btn-or"
@@ -265,163 +262,8 @@
             </div>
         </div>
     </footer>
-    <script src="js/supabase.js"></script>
     <script src="js/main.js" defer></script>
     <script src="js/register-sw.js" defer></script>
-    <script>
-    /* ── Formulaire RDV : sauvegarde Supabase + WhatsApp ─────── */
-    (function () {
-      const form = document.getElementById('rdvForm');
-      if (!form) return;
-
-      form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-        const btn = form.querySelector('button[type="submit"]');
-        const data = Object.fromEntries(new FormData(form));
-
-        /* Validation de base */
-        if (!data.nom?.trim() || !data.tel?.trim() || !data.service || !data.date) {
-          showRdvFeedback('Veuillez remplir tous les champs obligatoires (*).', 'error');
-          return;
-        }
-
-        /* Désactiver le bouton pendant l'envoi */
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours…';
-
-        /* 1. Sauvegarder en base Supabase */
-        try {
-          await sb.rdv.create({
-            nom:     data.nom.trim(),
-            tel:     data.tel.trim(),
-            email:   data.email?.trim() || null,
-            service: data.service,
-            date_rdv: data.date,
-            heure:   data.heure || null,
-            message: data.message?.trim() || null,
-          });
-        } catch (err) {
-          console.warn('Supabase RDV error:', err.message);
-          /* On continue quand même vers WhatsApp même si Supabase échoue */
-        }
-
-        /* 2. Ouvrir WhatsApp */
-        const msg =
-          `Bonjour Miralocks 👋\nJe souhaite prendre rendez-vous.\n\n` +
-          `📋 *Nom* : ${data.nom}\n` +
-          `📞 *Téléphone* : ${data.tel}\n` +
-          (data.email ? `📧 *Email* : ${data.email}\n` : '') +
-          `💆 *Service* : ${data.service}\n` +
-          `📅 *Date souhaitée* : ${data.date}\n` +
-          `🕐 *Heure souhaitée* : ${data.heure || 'Non précisée'}\n` +
-          `📝 *Message* : ${data.message || '(aucun)'}`;
-
-        window.open(
-          `https://wa.me/22897989001?text=${encodeURIComponent(msg)}`,
-          '_blank', 'noopener,noreferrer'
-        );
-
-        /* 3. Feedback visuel + reset */
-        showRdvFeedback('Votre demande a bien été enregistrée ! Nous vous répondrons très rapidement.', 'success');
-        form.reset();
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fab fa-whatsapp"></i> Envoyer via WhatsApp';
-      });
-
-      function showRdvFeedback(msg, type) {
-        let el = document.getElementById('rdv-feedback');
-        if (!el) {
-          el = document.createElement('div');
-          el.id = 'rdv-feedback';
-          el.style.cssText =
-            'margin-top:1rem;padding:.85rem 1.1rem;border-radius:8px;font-size:.9rem;font-weight:500;';
-          form.parentNode.insertBefore(el, form.nextSibling);
-        }
-        el.style.background = type === 'success' ? '#d1fae5' : '#fee2e2';
-        el.style.color      = type === 'success' ? '#065f46' : '#991b1b';
-        el.style.border     = `1px solid ${type === 'success' ? '#6ee7b7' : '#fca5a5'}`;
-        el.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        if (type === 'success') setTimeout(() => el.remove(), 6000);
-      }
-    })();
-    </script>
-    <script>
-    /* ── Date picker RDV : jours ouvrés seulement (Mar→Sam) ────── */
-    (function () {
-      var dateInput = document.getElementById('date');
-      var dateError = document.getElementById('date-error');
-      var form      = document.getElementById('rdvForm');
-      if (!dateInput) return;
-
-      /* Formate une date en YYYY-MM-DD (timezone locale) */
-      function toLocalISO(d) {
-        var y = d.getFullYear();
-        var m = String(d.getMonth() + 1).padStart(2, '0');
-        var j = String(d.getDate()).padStart(2, '0');
-        return y + '-' + m + '-' + j;
-      }
-
-      /* Calcule les bornes min/max en excluant Dim et Lun */
-      function calcBounds() {
-        var today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        /* Min = aujourd'hui (ou demain si déjà 18h) */
-        var minDate = new Date(today);
-        if (new Date().getHours() >= 18) minDate.setDate(minDate.getDate() + 1);
-
-        /* Avancer min si c'est un Dim(0) ou Lun(1) */
-        while (minDate.getDay() === 0 || minDate.getDay() === 1) {
-          minDate.setDate(minDate.getDate() + 1);
-        }
-
-        /* Max = chercher les 7 jours ouvrés suivants à partir de min */
-        var maxDate = new Date(minDate);
-        var counted = 0;
-        while (counted < 6) {          /* 7 jours ouvrés = 1 départ + 6 de plus */
-          maxDate.setDate(maxDate.getDate() + 1);
-          if (maxDate.getDay() !== 0 && maxDate.getDay() !== 1) counted++;
-        }
-
-        dateInput.min = toLocalISO(minDate);
-        dateInput.max = toLocalISO(maxDate);
-      }
-
-      calcBounds();
-
-      /* Validation en temps réel */
-      function validateDate() {
-        if (!dateInput.value) { dateError.style.display = 'none'; return true; }
-        var d   = new Date(dateInput.value + 'T00:00:00');
-        var day = d.getDay(); /* 0=Dim, 1=Lun */
-
-        if (day === 0 || day === 1) {
-          dateError.style.display = 'block';
-          dateInput.setCustomValidity('Jour invalide');
-          return false;
-        }
-        dateError.style.display = 'none';
-        dateInput.setCustomValidity('');
-        return true;
-      }
-
-      dateInput.addEventListener('change', validateDate);
-      dateInput.addEventListener('input',  validateDate);
-
-      /* Bloquer la soumission si jour invalide */
-      if (form) {
-        form.addEventListener('submit', function (e) {
-          if (!validateDate()) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            dateInput.focus();
-          }
-        }, true /* capture phase → avant le handler Supabase */);
-      }
-    })();
-    </script>
 </body>
 
 </html>
