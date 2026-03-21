@@ -49,29 +49,76 @@ const sb = {
   },
 
   async signOut() {
-    const s = sb.getSession();
+    const s = this.getSession();
     if (s) {
       await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
         method: 'POST',
-        headers: sb._h(s.token),
+        headers: this._h(s.token),
       }).catch(() => { });
     }
     localStorage.removeItem('ml_session');
   },
 
+  // Retourne la session actuelle (synchrone pour compatibilité UI)
   getSession() {
     try {
       const s = JSON.parse(localStorage.getItem('ml_session'));
-      if (!s || Date.now() > s.expires) { localStorage.removeItem('ml_session'); return null; }
+      if (!s) return null;
+      // Si expiré : ne pas supprimer — getValidSession() tentera le refresh
+      // On retourne null pour signaler que le token courant n'est plus utilisable
+      if (Date.now() > s.expires) return null;
       return s;
     } catch { return null; }
   },
 
-  isAdmin() { return !!sb.getSession(); },
+  // Rafraîchit la session de manière asynchrone (interne)
+  async _refresh() {
+    try {
+      const s = JSON.parse(localStorage.getItem('ml_session'));
+      if (!s || !s.refresh) return null;
+
+      const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON },
+        body: JSON.stringify({ refresh_token: s.refresh }),
+      });
+
+      if (!r.ok) throw new Error('Refresh failed');
+      const data = await r.json();
+
+      const newSession = {
+        token: data.access_token,
+        refresh: data.refresh_token,
+        email: data.user?.email || s.email,
+        expires: Date.now() + (data.expires_in * 1000),
+      };
+      localStorage.setItem('ml_session', JSON.stringify(newSession));
+      return newSession;
+    } catch (e) {
+      localStorage.removeItem('ml_session');
+      return null;
+    }
+  },
+
+  // Récupère une session valide, rafraîchit si nécessaire (async)
+  async getValidSession() {
+    const s = this.getSession();
+    if (s) {
+      // Si la session expire dans moins de 5 minutes, on rafraîchit préventivement
+      if (s.expires - Date.now() < 300000) return await this._refresh();
+      return s;
+    }
+    // Si déjà expiré mais qu'on a un refresh token en local
+    const local = JSON.parse(localStorage.getItem('ml_session') || '{}');
+    if (local.refresh) return await this._refresh();
+    return null;
+  },
+
+  isAdmin() { return !!this.getSession(); },
 
   /* ── STORAGE — upload fichier ────────────────────────────── */
   async upload(folder, file) {
-    const s = sb.getSession();
+    const s = await sb.getValidSession();
     if (!s) throw new Error('Non authentifié');
     const ext = file.name.split('.').pop().toLowerCase();
     const name = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
@@ -98,7 +145,7 @@ const sb = {
   },
 
   async deleteFile(url) {
-    const s = sb.getSession();
+    const s = await sb.getValidSession();
     if (!s) return;
     const path = url.split(`/${SUPABASE_BUCKET}/`)[1];
     if (!path) return;
@@ -110,10 +157,11 @@ const sb = {
 
   /* ── CRUD générique ──────────────────────────────────────── */
   async _get(table, params = '') {
+    const s = await sb.getValidSession();
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
       headers: {
         'apikey': SUPABASE_ANON,
-        'Authorization': `Bearer ${sb.getSession()?.token || SUPABASE_ANON}`,
+        'Authorization': `Bearer ${s?.token || SUPABASE_ANON}`,
       },
     });
     if (!r.ok) {
@@ -124,7 +172,7 @@ const sb = {
   },
 
   async _post(table, body) {
-    const s = sb.getSession();
+    const s = await sb.getValidSession();
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
       method: 'POST',
       headers: sb._h(s?.token),
@@ -141,7 +189,7 @@ const sb = {
   },
 
   async _patch(table, id, body) {
-    const s = sb.getSession();
+    const s = await sb.getValidSession();
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
       method: 'PATCH',
       headers: sb._h(s?.token),
@@ -156,7 +204,7 @@ const sb = {
   },
 
   async _delete(table, id) {
-    const s = sb.getSession();
+    const s = await sb.getValidSession();
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
       method: 'DELETE',
       headers: {
@@ -294,7 +342,7 @@ const sb = {
       return rows[0]?.valeur || null;
     },
     async set(key, valeur) {
-      const s = sb.getSession();
+      const s = await sb.getValidSession();
       const r = await fetch(`${SUPABASE_URL}/rest/v1/site_settings`, {
         method: 'POST',
         headers: {
@@ -308,7 +356,7 @@ const sb = {
       return text ? JSON.parse(text) : [];
     },
     async delete(key) {
-      const s = sb.getSession();
+      const s = await sb.getValidSession();
       await fetch(`${SUPABASE_URL}/rest/v1/site_settings?id=eq.${encodeURIComponent(key)}`, {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${s?.token}`, 'Prefer': 'return=minimal' },

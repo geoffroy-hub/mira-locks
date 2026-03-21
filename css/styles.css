@@ -1682,6 +1682,29 @@ select.form-control {
   -webkit-appearance: none;
 }
 
+input[type="date"].form-control {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-height: 48px; /* Force la hauteur sur iOS */
+  display: block;
+  position: relative; /* Pour positionner l'icône si besoin */
+}
+
+/* Force le placeholder (vide par défaut sur certains iOS) */
+input[type="date"].form-control::before {
+  content: attr(placeholder);
+  color: #aaa;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+input[type="date"].form-control:valid::before,
+input[type="date"].form-control:focus::before {
+  display: none;
+}
+
 textarea.form-control {
   resize: vertical;
   min-height: 120px;
@@ -1696,6 +1719,33 @@ textarea.form-control {
 @media (max-width: 480px) {
   .form-grid {
     grid-template-columns: 1fr;
+  }
+  
+  /* ── Design spécifique Mobile "Dark inputs" (comme sur la maquette) ── */
+  .rdv-form > div[style*="background:#fff"] {
+    padding: 1.5rem 1rem !important; /* Réduire le padding sur mobile */
+    box-shadow: none !important;
+  }
+  .rdv-form .form-label {
+    color: var(--or) !important;
+  }
+  .rdv-form .form-control {
+    background-color: #1e1e1e !important;
+    border: none !important;
+    color: #f5f5f5 !important;
+    border-radius: 14px !important;
+    padding: 1rem 1.25rem !important;
+  }
+  .rdv-form .form-control::placeholder {
+    color: #aaa !important;
+  }
+  .rdv-form .form-control:focus {
+    box-shadow: 0 0 0 2px var(--or) !important;
+  }
+  /* Pour l'icône du calendrier (date picker dynamique) */
+  .rdv-form input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1); /* Rend l'icône visible sur fond sombre */
+    opacity: 0.5;
   }
 }
 

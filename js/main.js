@@ -317,32 +317,36 @@ if (lightbox) {
     }
   });
 
-  // Galerie cliquable — EXACTEMENT comme la version originale qui fonctionnait
-  const galleryImgs = Array.from(document.querySelectorAll('.gallery-item img'));
-  galleryImgs.forEach((img, i) => {
-    img.closest('.gallery-item').addEventListener('click', () => {
-      openLightbox(galleryImgs.map(im => ({ src: im.src, alt: im.alt })), i);
+  // Galerie cliquable — uniquement sur les items sans gestionnaire dédié
+  // Les pages ayant data-lightbox-managed="true" gèrent leur propre lightbox (ex: gallery.html)
+  if (!document.body.dataset.lightboxManaged) {
+    const galleryImgs = Array.from(document.querySelectorAll('.gallery-item img'));
+    galleryImgs.forEach((img, i) => {
+      img.closest('.gallery-item').addEventListener('click', () => {
+        openLightbox(galleryImgs.map(im => ({ src: im.src, alt: im.alt })), i);
+      });
     });
-  });
+  }
 }
 
 // ── Stats counter ────────────────────────────────────────────────
 const statsSection = document.querySelector('.stats');
 if (statsSection && 'IntersectionObserver' in window) {
   const countUp = (el, target, suffix) => {
+    // Annuler une animation en cours si elle existe
+    if (el._animFrame) cancelAnimationFrame(el._animFrame);
     let current = 0;
     const step = Math.ceil(target / 60);
     const tick = () => {
       current = Math.min(current + step, target);
       el.textContent = current + suffix;
-      if (current < target) requestAnimationFrame(tick);
+      if (current < target) el._animFrame = requestAnimationFrame(tick);
     };
-    requestAnimationFrame(tick);
+    el._animFrame = requestAnimationFrame(tick);
   };
 
   const statsIo = new IntersectionObserver(([e]) => {
     if (!e.isIntersecting) return;
-    statsIo.disconnect();
     document.querySelectorAll('.stat-number[data-target]').forEach(el => {
       countUp(el, +el.dataset.target, el.dataset.suffix || '');
     });
@@ -364,25 +368,7 @@ if (cookieBanner && !localStorage.getItem('Miralocks_cookies')) {
   });
 }
 
-// ── Formulaire RDV → WhatsApp ─────────────────────────────────────
-const rdvForm = document.getElementById('rdvForm');
-if (rdvForm) {
-  rdvForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const data = Object.fromEntries(new FormData(rdvForm));
-    const msg = `Bonjour Miralocks 👋
-Je souhaite prendre rendez-vous.
-
-📋 *Nom* : ${data.nom || ''}
-📞 *Téléphone* : ${data.tel || ''}
-💆 *Service* : ${data.service || ''}
-📅 *Date souhaitée* : ${data.date || ''}
-🕐 *Heure souhaitée* : ${data.heure || ''}
-📝 *Message* : ${data.message || '(aucun)'}`;
-    const url = `https://wa.me/22897989001?text=${encodeURIComponent(msg)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  });
-}
+// (Le formulaire RDV est désormais géré directement dans rendezvous.html pour inclure l'enregistrement Supabase)
 
 // ── Theme ────────────────────────────────────────────────────────
 // Injection rapide déjà faite dans le <head> de chaque page HTML.
@@ -416,19 +402,16 @@ function initTheme() {
 }
 document.addEventListener('DOMContentLoaded', initTheme);
 
-// ── Accès Admin secret ────────────────────────────────────────────
-// Desktop  : Ctrl + Shift + A
-// Mobile   : 5 taps rapides sur le logo nav en moins de 2s
+// ── Navigation interne ──────────────────────────────────────────
 (function () {
-  var ADMIN_URL = 'admin.html';
+  var _p = atob('YWRtaW4uaHRtbA=='); // encodé base64
   var REQUIRED_TAPS = 3;
-  var TIME_WINDOW   = 2000; // ms pour enchaîner les 3 taps
 
-  // Raccourci clavier desktop
+  // Raccourci clavier desktop (non documenté dans le source)
   document.addEventListener('keydown', function (e) {
-    if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+    if (e.ctrlKey && e.shiftKey && e.altKey && (e.key === 'M' || e.key === 'm')) {
       e.preventDefault();
-      window.location.href = ADMIN_URL;
+      window.location.href = _p;
     }
   });
 
@@ -450,7 +433,7 @@ document.addEventListener('DOMContentLoaded', initTheme);
     lastTap = now;
     clearTimeout(tapTimer);
 
-    // Triple tap : mobile uniquement — sur desktop utiliser Ctrl+Shift+A
+    // Triple tap : mobile uniquement
     if (isTouchDevice) {
       e.preventDefault();
     } else {
@@ -464,10 +447,9 @@ document.addEventListener('DOMContentLoaded', initTheme);
       logo.style.opacity = '.3';
       setTimeout(function () {
         logo.style.opacity = '';
-        window.location.href = ADMIN_URL;
+        window.location.href = _p;
       }, 200);
     } else {
-      // Annuler si la fenêtre globale de 2s est dépassée
       tapTimer = setTimeout(function () { taps = 0; }, 400);
     }
   });

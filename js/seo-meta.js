@@ -209,10 +209,15 @@ const SEO = {
 
   /* ── Auto-détection de la page courante ─────────────────── */
   init() {
-    const path = window.location.pathname;
-    const page = path.split('/').pop() || 'index.html';
-    const key = page === '' ? 'index.html' : page;
-    this.inject(key in this.pages ? key : 'index.html');
+    // Nettoyer le chemin (enlever les slashes de fin)
+    let path = window.location.pathname.replace(/\/$/, '') || '/index.html';
+    let page = path.split('/').pop();
+
+    // Si on a "gallery" au lieu de "gallery.html", on ajoute l'extension pour correspondre aux clés
+    if (page && !page.includes('.')) page += '.html';
+
+    const key = (page in this.pages) ? page : 'index.html';
+    this.inject(key);
   },
 };
 
