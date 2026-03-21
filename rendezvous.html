@@ -277,6 +277,18 @@
             const form = document.getElementById('rdvForm');
             if (!form) return;
 
+            /* ── Initialisation des limites de date (Aujourd'hui -> +7 jours) ── */
+            const dateInput = form.querySelector('#date');
+            if (dateInput) {
+                const today = new Date();
+                const maxDate = new Date();
+                maxDate.setDate(today.getDate() + 7);
+                
+                const formatDate = (d) => d.toISOString().split('T')[0];
+                dateInput.min = formatDate(today);
+                dateInput.max = formatDate(maxDate);
+            }
+
             form.addEventListener('submit', async function (e) {
                 e.preventDefault();
 
@@ -286,6 +298,14 @@
                 /* Validation de base */
                 if (!data.nom?.trim() || !data.tel?.trim() || !data.service || !data.date) {
                     showRdvFeedback('Veuillez remplir tous les champs obligatoires (*).', 'error');
+                    return;
+                }
+
+                /* Validation des jours de fermeture (Fermé Dimanche=0 et Lundi=1) */
+                const selectedDate = new Date(data.date);
+                const day = selectedDate.getUTCDay(); // UTC car input date est YYYY-MM-DD
+                if (day === 0 || day === 1) {
+                    showRdvFeedback('Désolé, le salon est fermé le dimanche et le lundi.', 'error');
                     return;
                 }
 
