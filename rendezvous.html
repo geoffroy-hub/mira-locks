@@ -280,13 +280,29 @@
             /* ── Initialisation des limites de date (Aujourd'hui -> +7 jours) ── */
             const dateInput = form.querySelector('#date');
             if (dateInput) {
-                const today = new Date();
-                const maxDate = new Date();
-                maxDate.setDate(today.getDate() + 7);
+                const now = new Date();
+                const formatDate = (d) => {
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${day}`;
+                };
+
+                dateInput.min = formatDate(now);
                 
-                const formatDate = (d) => d.toISOString().split('T')[0];
-                dateInput.min = formatDate(today);
+                const maxDate = new Date();
+                maxDate.setDate(now.getDate() + 7);
                 dateInput.max = formatDate(maxDate);
+
+                // Validation instantanée lors du changement (pour iPhone/Android)
+                dateInput.addEventListener('change', function() {
+                    const selected = new Date(this.value);
+                    const day = selected.getUTCDay();
+                    if (day === 0 || day === 1) {
+                        showRdvFeedback('Le salon est fermé le dimanche et le lundi.', 'error');
+                        this.value = ''; // Réinitialise
+                    }
+                });
             }
 
             form.addEventListener('submit', async function (e) {
