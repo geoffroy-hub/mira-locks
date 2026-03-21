@@ -240,6 +240,14 @@
     .data-table td { padding:.75rem 1rem; border-bottom:1px solid #f0f0f0; font-size:.88rem; }
     .data-table tr:last-child td { border-bottom:none; }
     .data-table tr:hover td { background:rgba(12,51,32,.03); }
+    .rdv-row { cursor:pointer; }
+    .rdv-details { display:none; background:#fcfcfc; border-bottom:2px solid var(--or); }
+    .rdv-details td { padding:1.5rem !important; }
+    .rdv-row.rdv-expanded + .rdv-details { display:table-row; }
+    .rdv-row.rdv-expanded td { background:rgba(12,51,32,.05); border-bottom:none; }
+    .rdv-one-line { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; display:inline-block; vertical-align:middle; }
+    .photo-preview-admin { width:120px; height:120px; object-fit:cover; border-radius:10px; border:2px solid #eee; cursor:zoom-in; }
+    .photo-preview-admin:hover { transform:scale(1.05); }
     .table-thumb {
       width:56px; height:56px; object-fit:cover;
       border-radius:8px; display:block;
@@ -479,6 +487,34 @@
       .table-thumb { width: 44px; height: 44px; }
       .table-actions { gap: .25rem; flex-wrap: wrap; }
 
+      /* Transformation du tableau RDV en cartes sur mobile/tablette */
+      #panel-rendezvous .table-wrap { overflow: visible; background: none; box-shadow: none; border: none; }
+      #panel-rendezvous .data-table { display: block; border: none; background: none; box-shadow: none; min-width: 100%; }
+      #panel-rendezvous thead { display: none; }
+      #panel-rendezvous tbody { display: block; width: 100%; }
+      #panel-rendezvous tr.rdv-row {
+        display: block; background: #fff; border-radius: 12px; 
+        margin-bottom: 0.85rem; padding: 1rem; border: 1px solid #eee;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04); transition: all 0.2s;
+      }
+      #panel-rendezvous tr.rdv-row td { display: block; padding: 0.15rem 0 !important; border: none; }
+      #panel-rendezvous tr.rdv-row td:nth-child(1) { color: var(--vert); font-weight: 700; margin-bottom: 0.2rem; }
+      #panel-rendezvous tr.rdv-row td:nth-child(2) { font-size: 1rem; color: #1a1a1a; }
+      #panel-rendezvous tr.rdv-row td:nth-child(3) { color: var(--gris-d); font-size: 0.82rem; }
+      #panel-rendezvous tr.rdv-row td:nth-child(4) { margin-top: 0.5rem; }
+      #panel-rendezvous tr.rdv-row td:nth-child(5) { display: none; } /* On cache l'action "oeil" sur mobile */
+
+      #panel-rendezvous tr.rdv-details { 
+        display: none; background: #fff; margin-top: -1.35rem; margin-bottom: 1rem;
+        border-radius: 0 0 12px 12px; border: 1px solid #eee; border-top: none;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.06); 
+      }
+      #panel-rendezvous .rdv-row.rdv-expanded { border-radius: 12px 12px 0 0; border-bottom: 1px dashed #eee; margin-bottom: 0; box-shadow: none; }
+      #panel-rendezvous .rdv-row.rdv-expanded + .rdv-details { display: block; }
+      #panel-rendezvous tr.rdv-details td { display: block; padding: 1.25rem !important; }
+      #panel-rendezvous .rdv-one-line { max-width: 100%; white-space: normal; display: block; }
+      #panel-rendezvous .photo-preview-admin { width: 100%; height: auto; max-width: 280px; }
+
       /* ─ Boutons ─ */
       .btn { font-size: .84rem; padding: .52rem .9rem; }
       .btn-sm { padding: .32rem .55rem; font-size: .76rem; }
@@ -556,7 +592,6 @@
 
       .data-table   { font-size: .76rem; min-width: 420px; }
       .data-table th,
-      .data-table td { padding: .45rem .5rem; }
       .table-thumb  { width: 38px; height: 38px; }
 
       .modal { max-height: 94vh; }
@@ -1739,49 +1774,66 @@ async function loadRdv(statut) {
             <th>Date / Heure</th>
             <th>Client</th>
             <th>Service</th>
-            <th>Contact</th>
             <th>Statut</th>
             <th>Actions</th>
           </tr></thead>
-          <tbody>
+          <tbody id="rdv-tbody">
             ${rdvs.map(r => {
               const st = RDV_STATUTS[r.statut] || RDV_STATUTS.en_attente;
-              const dateStr = r.date_rdv ? new Date(r.date_rdv + 'T12:00:00').toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'short', year:'numeric' }) : '—';
-              return `<tr>
-                <td>
-                  <strong>${dateStr}</strong><br>
-                  <span style="color:var(--gris-d);font-size:.82rem">${r.heure || 'Heure non précisée'}</span>
-                </td>
-                <td>
-                  <strong>${escHtml(r.nom)}</strong>
-                  ${r.note_admin ? `<br><span style="font-size:.78rem;color:#6b7280;font-style:italic">${escHtml(r.note_admin)}</span>` : ''}
-                </td>
-                <td>${escHtml(r.service)}</td>
-                <td>
-                  <a href="tel:${escHtml(r.tel)}" style="color:var(--vert);font-weight:600">${escHtml(r.tel)}</a>
-                  ${r.email ? `<br><a href="mailto:${escHtml(r.email)}" style="font-size:.8rem;color:var(--gris-d)">${escHtml(r.email)}</a>` : ''}
-                  ${r.message ? `<br><span style="font-size:.78rem;color:#555;font-style:italic">"${escHtml(r.message.slice(0,60))}${r.message.length>60?'…':''}"</span>` : ''}
-                </td>
-                <td>
-                  <span style="display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .7rem;border-radius:20px;font-size:.78rem;font-weight:600;background:${st.bg};color:${st.color}">
-                    <i class="fas fa-${st.icon}"></i> ${st.label}
-                  </span>
-                </td>
-                <td>
-                  <div class="table-actions">
-                    ${r.statut === 'en_attente' ? `
-                      <button class="btn btn-sm" style="background:#10b981;color:#fff" onclick="rdvSetStatut(${r.id},'confirme')" title="Confirmer"><i class="fas fa-check"></i></button>
-                      <button class="btn btn-sm" style="background:#ef4444;color:#fff" onclick="rdvSetStatut(${r.id},'annule')" title="Annuler"><i class="fas fa-times"></i></button>
-                    ` : ''}
-                    ${r.statut === 'confirme' ? `
-                      <button class="btn btn-sm" style="background:#6b7280;color:#fff" onclick="rdvSetStatut(${r.id},'termine')" title="Marquer terminé"><i class="fas fa-flag-checkered"></i></button>
-                    ` : ''}
-                    <button class="btn btn-outline btn-sm" onclick="rdvContact(${JSON.stringify(r).replace(/"/g,'&quot;')})" title="Contacter sur WhatsApp"><i class="fab fa-whatsapp" style="color:#25D366"></i></button>
-                    <button class="btn btn-outline btn-sm" onclick="rdvNote(${r.id}, ${JSON.stringify(r.note_admin || '').replace(/"/g,'&quot;')})" title="Note admin"><i class="fas fa-sticky-note"></i></button>
-                    <button class="btn btn-outline btn-sm" onclick="rdvDelete(${r.id})" title="Supprimer"><i class="fas fa-trash" style="color:var(--danger)"></i></button>
-                  </div>
-                </td>
-              </tr>`;
+              const dateStr = r.date_rdv ? new Date(r.date_rdv + 'T12:00:00').toLocaleDateString('fr-FR', { day:'2-digit', month:'short' }) : '—';
+              return `
+                <tr class="rdv-row" id="rdv-row-${r.id}" onclick="rdvToggle(${r.id})">
+                  <td><strong>${dateStr}</strong> — ${r.heure || '??'}</td>
+                  <td><strong>${escHtml(r.nom)}</strong></td>
+                  <td><span class="rdv-one-line">${escHtml(r.service)}</span></td>
+                  <td>
+                    <span style="display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .6rem;border-radius:20px;font-size:.75rem;font-weight:600;background:${st.bg};color:${st.color}">
+                      <i class="fas fa-${st.icon}"></i> ${st.label}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="table-actions" onclick="event.stopPropagation()">
+                      <button class="btn btn-sm btn-outline btn-icon" onclick="rdvToggle(${r.id})" title="Voir détails"><i class="fas fa-eye"></i></button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="rdv-details" id="rdv-details-${r.id}">
+                  <td colspan="5">
+                    <div style="display:flex;gap:2rem;flex-wrap:wrap">
+                      <div style="flex:1;min-width:300px">
+                        <h4 style="color:var(--vert);margin-bottom:.75rem">Informations du Client</h4>
+                        <p><strong>Nom :</strong> ${escHtml(r.nom)}</p>
+                        <p><strong>Téléphone :</strong> <a href="tel:${r.tel}">${r.tel}</a></p>
+                        ${r.email ? `<p><strong>Email :</strong> <a href="mailto:${r.email}">${r.email}</a></p>` : ''}
+                        <p><strong>Date :</strong> ${r.date_rdv} à ${r.heure || 'non précisée'}</p>
+                        <p><strong>Service :</strong> ${escHtml(r.service)}</p>
+                        <div style="margin-top:1.25rem;padding:1rem;background:#f0f7f3;border-radius:10px;border-left:4px solid var(--vert)">
+                          <h5 style="margin-bottom:.5rem;color:var(--vert)">Message du client :</h5>
+                          <p style="font-style:italic">"${escHtml(r.message || 'Aucun message particulier.')}"</p>
+                        </div>
+                        ${r.note_admin ? `<div style="margin-top:1rem;padding:1rem;background:#fff8e6;border-radius:10px;border-left:4px solid #f59e0b"><h5 style="margin-bottom:.5rem;color:#92400e">Note admin :</h5><p>${escHtml(r.note_admin)}</p></div>` : ''}
+                        <div class="table-actions" style="margin-top:1.5rem">
+                         ${r.statut === 'en_attente' ? `
+                            <button class="btn btn-success btn-sm" onclick="rdvSetStatut(${r.id},'confirme')"><i class="fas fa-check"></i> Confirmer</button>
+                            <button class="btn btn-danger btn-sm" onclick="rdvSetStatut(${r.id},'annule')"><i class="fas fa-times"></i> Annuler</button>
+                          ` : ''}
+                          <button class="btn btn-outline btn-sm" onclick="rdvContact(${JSON.stringify(r).replace(/"/g,'&quot;')})"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                          <button class="btn btn-outline btn-sm" onclick="rdvNote(${r.id}, ${JSON.stringify(r.note_admin || '').replace(/"/g,'&quot;')})"><i class="fas fa-sticky-note"></i> Note</button>
+                          <button class="btn btn-outline btn-sm" onclick="rdvDelete(${r.id})"><i class="fas fa-trash" style="color:var(--danger)"></i> Supprimer</button>
+                        </div>
+                      </div>
+                      ${r.photo_url ? `
+                        <div style="flex:0 0 200px">
+                          <h4 style="color:var(--vert);margin-bottom:.75rem">Photo envoyée</h4>
+                          <a href="${r.photo_url}" target="_blank">
+                            <img src="${r.photo_url}" class="photo-preview-admin" alt="Photo client">
+                          </a>
+                        </div>
+                      ` : ''}
+                    </div>
+                  </td>
+                </tr>
+              `;
             }).join('')}
           </tbody>
         </table>
@@ -1794,6 +1846,21 @@ async function loadRdv(statut) {
 function escHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function rdvToggle(id) {
+  const row = $(`rdv-row-${id}`);
+  const details = $(`rdv-details-${id}`);
+  if (!row || !details) return;
+  
+  const isOpen = row.classList.contains('rdv-expanded');
+  
+  // Fermer les autres (optionnel, mais propre)
+  document.querySelectorAll('.rdv-row').forEach(r => r.classList.remove('rdv-expanded'));
+  
+  if (!isOpen) {
+    row.classList.add('rdv-expanded');
+  }
 }
 
 async function rdvSetStatut(id, statut) {

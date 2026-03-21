@@ -144,6 +144,30 @@ const sb = {
     return `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${name}`;
   },
 
+  /* ── STORAGE — upload public (sans session) ─────────── */
+  async publicUpload(folder, file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const name = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const ct = file.type || 'application/octet-stream';
+    const r = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${name}`,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'Content-Type': ct,
+        },
+        body: file,
+      }
+    );
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.message || e.error || `Upload échoué (${r.status})`);
+    }
+    return `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${name}`;
+  },
+
   async deleteFile(url) {
     const s = await sb.getValidSession();
     if (!s) return;
@@ -392,7 +416,11 @@ sb.rdv = {
         'Authorization': `Bearer ${SUPABASE_ANON}`,
         'Prefer': 'return=minimal',
       },
-      body: JSON.stringify({ ...data, statut: 'en_attente' }),
+      body: JSON.stringify({
+        ...data,
+        statut: 'en_attente',
+        created_at: new Date().toISOString()
+      }),
     });
     if (!r.ok) {
       const e = await r.json().catch(() => ({}));

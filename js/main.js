@@ -400,7 +400,20 @@ function initTheme() {
     });
   }
 }
-document.addEventListener('DOMContentLoaded', initTheme);
+// ── Copyright dynamisation ────────────────────────────────────
+function initCopyright() {
+  const spans = document.querySelectorAll('.footer-bottom span');
+  spans.forEach(span => {
+    if (span.textContent.includes('©')) {
+      span.textContent = span.textContent.replace(/\d{4}/, new Date().getFullYear());
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  initCopyright();
+});
 
 // ── Navigation interne ──────────────────────────────────────────
 (function () {
