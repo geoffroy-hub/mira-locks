@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+
+<head>
+  <meta name="google" content="notranslate">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+  <title>Admin — Institut MiraLocks</title>
+  <link rel="icon" type="image/png" href="assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    crossorigin="anonymous">
+  <!-- FullCalendar -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+  <!-- Chart.js (Statistiques) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="css/admin.css?v=c189e9cd">
+  <script>
+    // Injection thématique rapide (anti-flash)
+    var __theme = localStorage.getItem('Miralocks_theme') || 'light';
+    document.documentElement.dataset.theme = __theme;
+  </script>
+</head>
+
+<body>
+
+  <!-- ═══════════════════════ LOGIN ═══════════════════════════ -->
+  <div id="login-page">
+    <div style="position: absolute; top: 1.5rem; right: 1.5rem; z-index: 10;">
+      <a href="index.html" class="btn-logout"
+        style="display:flex; align-items:center; gap:.5rem; text-decoration:none;">
+        <i class="fas fa-external-link-alt"></i> Voir le site
+      </a>
+    </div>
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="icon">🔐</div>
+        <h1>Institut MiraLocks</h1>
+        <p>Espace Administration</p>
+      </div>
+      <div class="login-field">
+        <label for="login-email">Adresse email</label>
+        <input type="email" id="login-email" placeholder="admin@miralocks.com" autocomplete="email">
+      </div>
+      <div class="login-field">
+        <label for="login-pass">Mot de passe</label>
+        <div class="pass-wrapper">
+          <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="toggle-pass" id="toggle-pass"
+            aria-label="Afficher/Masquer le mot de passe">&#128065;</button>
+        </div>
+      </div>
+      <button class="btn-login" id="login-btn">
+        <span id="login-btn-text">Se connecter</span>
+      </button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ ADMIN ════════════════════════════ -->
+  <div id="admin-page">
+
+    <!-- Header -->
+    
+<header class="admin-header">
+  <meta name="google" content="notranslate">
+
+      <div class="admin-header-left">
+        <div class="admin-header-logo"><img src="assets/admin-logo.jpg" alt="Logo"></div>
+        <div>
+          <div class="admin-title">✦ MiraLocks Admin</div>
+          <div class="admin-subtitle" id="admin-email-display"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.75rem;align-items:center">
+        <button id="pwa-install-btn" class="btn-logout" style="display:none; padding:.4rem .6rem; border:1px solid var(--or); color:var(--or)" aria-label="Installer l'application">
+          <i class="fas fa-download"></i> <span style="font-size:.8rem; margin-left:.25rem">Installer App</span>
+        </button>
+        <button id="theme-toggle" class="btn-logout" aria-label="Changer le thème" style="padding:.4rem .6rem">
+          <i class="fas fa-moon"></i>
+        </button>
+        <span style="width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 .25rem"></span>
+        <a href="index.html" class="btn-logout"><i class="fas fa-home"></i> Voir le site</a>
+        <button class="btn-logout" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+        <!-- Bouton hamburger intégré dans la topbar (mobile uniquement) -->
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" aria-expanded="false" style="display:none">
+          <span></span><span></span><span></span>
+          <span class="hamburger-badge" id="hamburger-badge"></span>
+        </button>
+      </div>
+    </header>
+
+    <div class="admin-body">
+
+      <!-- Sidebar -->
+      <nav class="sidebar">
+        <div class="sidebar-section">Tableau de bord</div>
+        <div class="nav-item active" data-panel="dashboard"><i class="fas fa-chart-pie"></i> Vue d'ensemble</div>
+        <div class="nav-item" data-panel="google-analytics"><i class="fas fa-chart-line" style="color:#4285F4"></i> Stats Google</div>
+
+        <div class="sidebar-section" style="margin-top:.75rem">Contenu</div>
+        <div class="nav-item" data-panel="blog"><i class="fas fa-newspaper"></i> Articles Blog</div>
+        <div class="nav-item" data-panel="galerie"><i class="fas fa-images"></i> Galerie Photos</div>
+        <div class="nav-item" data-panel="videos"><i class="fas fa-video"></i> Vidéos</div>
+        <div class="nav-item" data-panel="avis">
+          <i class="fas fa-star"></i> Avis Clients
+          <span class="nav-badge" id="avis-badge" style="display:none">0</span>
+        </div>
+        <div class="nav-item" data-panel="rdv-planning"><i class="fas fa-calendar-alt"></i> Planning</div>
+        <div class="nav-item" data-panel="rendezvous">
+          <i class="fas fa-calendar-check"></i> Rendez-vous
+          <span class="nav-badge" id="rdv-badge" style="display:none">0</span>
+        </div>
+
+        <div class="nav-item" data-panel="services-admin"><i class="fas fa-cut"></i> Prestations</div>
+        <div class="sidebar-section" style="margin-top:.75rem">Configuration</div>
+        <div class="nav-item" data-panel="historique"><i class="fas fa-history"></i> Historique</div>
+        <div class="nav-item" data-panel="parametres"><i class="fas fa-cog"></i> Paramètres</div>
+      </nav>
+
+      <!-- Main -->
+      <main class="admin-main">
+
+        <!-- ── DASHBOARD ───────────────────────────────── -->
+        <div class="panel active" id="panel-dashboard">
+          <div class="panel-header">
+            <h1 class="panel-title">Vue d'ensemble</h1>
+            <div style="display:flex;gap:.5rem">
+              <button class="btn btn-outline" onclick="loadDashboard()"><i class="fas fa-sync"></i> Actualiser</button>
+              <button class="btn btn-or" onclick="printDailyAgenda()"><i class="fas fa-print"></i> Agenda du jour</button>
+            </div>
+          </div>
+
+          <!-- Rendez-vous du Jour (Widget Dynamique) -->
+          <div id="dash-today" style="margin-bottom:2rem"></div>
+
+          <div class="dash-grid" id="dash-grid">
+            <div class="loading">
+              <div class="spinner"></div> Chargement…
+            </div>
+          </div>
+          <div id="dash-pending" style="margin-top:1.5rem"></div>
+
+          <!-- Visites du site (Rapport Looker Studio) -->
+          <div class="dash-card" style="padding:1.5rem;cursor:default;margin-top:2rem">
+            <h3 style="margin:0 0 1rem 0;font-size:1rem;color:var(--vert);display:flex;align-items:center;gap:.5rem">
+              <i class="fas fa-chart-line"></i> Statistiques de fréquentation
+            </h3>
+            <div style="padding:0; overflow:hidden; border-radius:12px; background:#fff; box-shadow:var(--shadow); min-height:450px; display:flex; align-items:center; justify-content:center">
+               <iframe class="stats-iframe" width="100%" height="450" data-src="https://lookerstudio.google.com/embed/reporting/100d9356-28c3-4364-b120-337e0c08e027/page/z6BuF" frameborder="0" style="border:0; display:none" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+               <div class="stats-placeholder" style="text-align:center; padding:2rem">
+                 <i class="fas fa-chart-line" style="font-size:3rem; color:#eee; margin-bottom:1rem; display:block"></i>
+                 <button class="btn btn-sm btn-outline" onclick="loadStatsIframes(this.parentElement.parentElement)">
+                   <i class="fas fa-play"></i> Charger les statistiques
+                 </button>
+               </div>
+            </div>
+          </div>
+
+          <!-- Graphique RDV par semaine -->
+          <div class="dash-card" style="padding:1.5rem;cursor:default;margin-top:2rem">
+            <div
+              style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+              <h3 style="margin:0;font-size:1rem;color:var(--vert);display:flex;align-items:center;gap:.5rem">
+                <i class="fas fa-chart-line"></i> Rendez-vous par semaine
+              </h3>
+              <div style="display:flex;gap:.5rem">
+                <button class="btn btn-sm btn-outline" id="btn-week-4" onclick="setWeekRange(4)"
+                  style="font-size:11px">4 sem.</button>
+                <button class="btn btn-sm" id="btn-week-8" onclick="setWeekRange(8)"
+                  style="font-size:11px;background:var(--vert);color:#fff">8 sem.</button>
+                <button class="btn btn-sm btn-outline" id="btn-week-12" onclick="setWeekRange(12)"
+                  style="font-size:11px">12 sem.</button>
+              </div>
+            </div>
+            <div style="position:relative;height:200px"><canvas id="rdvWeekChart"></canvas></div>
+          </div>
+          <div class="dash-grid dash-grid-stats"
+            style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:1rem;gap:1rem">
+            <div class="dash-card" style="padding:1.25rem;cursor:default;min-height:300px">
+              <h3 style="margin-bottom:1rem;font-size:1rem;color:var(--vert);display:flex;align-items:center;gap:.5rem">
+                <i class="fas fa-chart-bar"></i> État des Rendez-vous
+              </h3>
+              <div style="position:relative;height:220px"><canvas id="rdvStatChart"></canvas></div>
+            </div>
+            <div class="dash-card" style="padding:1.25rem;cursor:default;min-height:300px">
+              <h3 style="margin-bottom:1rem;font-size:1rem;color:var(--vert);display:flex;align-items:center;gap:.5rem">
+                <i class="fas fa-trophy"></i> Services les plus demandés
+              </h3>
+              <div style="position:relative;height:220px"><canvas id="rdvServiceChart"></canvas></div>
+            </div>
+          </div>
+          <div class="dash-grid"
+            style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:1rem;gap:1rem" id="dash-kpi">
+          </div>
+        </div>
+
+        <!-- ── GOOGLE ANALYTICS ───────────────────────────── -->
+        <div class="panel" id="panel-google-analytics">
+          <div class="panel-header">
+            <h1 class="panel-title">Statistiques Google Analytics <span>Rapport Looker Studio</span></h1>
+            <div style="display:flex;gap:.5rem">
+               <button class="btn btn-outline btn-sm" onclick="window.open('https://analytics.google.com/', '_blank')">
+                 <i class="fas fa-external-link-alt"></i> Ouvrir Google Analytics
+               </button>
+            </div>
+          </div>
+          <div class="dash-card" style="padding:0; overflow:hidden; border:none; background:transparent; box-shadow:none; min-height:600px; display:flex; align-items:center; justify-content:center">
+            <iframe class="stats-iframe" width="100%" height="750" data-src="https://lookerstudio.google.com/embed/reporting/100d9356-28c3-4364-b120-337e0c08e027/page/z6BuF" frameborder="0" style="border:0; border-radius:12px; background:#fff; box-shadow:var(--shadow); display:none" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+            <div class="stats-placeholder" style="text-align:center; padding:5rem; background:#fff; width:100%; border-radius:12px; box-shadow:var(--shadow)">
+                 <i class="fas fa-chart-bar" style="font-size:5rem; color:#eee; margin-bottom:1.5rem; display:block"></i>
+                 <h2 style="margin-bottom:1.5rem; color:var(--vert)">Rapport de Fréquentation</h2>
+                 <button class="btn btn-primary" onclick="loadStatsIframes(this.parentElement.parentElement)">
+                   <i class="fas fa-eye"></i> Afficher le rapport détaillé
+                 </button>
+                 <p style="margin-top:1rem; font-size:.8rem; color:#999">Le chargement peut prendre quelques secondes selon votre connexion.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── BLOG ───────────────────────────────────── -->
+        <div class="panel" id="panel-blog">
+          <div class="panel-header">
+            <h1 class="panel-title">Articles Blog <span id="blog-count"></span></h1>
+            <button class="btn btn-primary" onclick="openModal_Blog_new()"><i class="fas fa-plus"></i> Nouvel
+              article</button>
+          </div>
+          <div id="blog-list">
+            <div class="loading">
+              <div class="spinner"></div> Chargement…
+            </div>
+          </div>
+        </div>
+
+        <!-- ── GALERIE ────────────────────────────────── -->
+        <div class="panel" id="panel-galerie">
+          <div class="panel-header">
+            <h1 class="panel-title">Galerie Photos <span id="galerie-count"></span></h1>
+            <button class="btn btn-primary" onclick="openModal('galerie')"><i class="fas fa-plus"></i> Ajouter
+              photo</button>
+          </div>
+          <div id="galerie-list">
+            <div class="loading">
+              <div class="spinner"></div> Chargement…
+            </div>
+          </div>
+        </div>
+
+        <!-- ── VIDÉOS ─────────────────────────────────── -->
+        <div class="panel" id="panel-videos">
+          <div class="panel-header">
+            <h1 class="panel-title">Vidéos <span id="videos-count"></span></h1>
+            <button class="btn btn-primary" onclick="openModal_Video_new()"><i class="fas fa-plus"></i> Ajouter
+              vidéo</button>
+          </div>
+          <div id="videos-list">
+            <div class="loading">
+              <div class="spinner"></div> Chargement…
+            </div>
+          </div>
+        </div>
+
+        <!-- ── AVIS ───────────────────────────────────── -->
+        <div class="panel" id="panel-avis">
+          <div class="panel-header">
+            <h1 class="panel-title">Avis Clients <span id="avis-count"></span></h1>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              <button class="btn btn-outline btn-sm" onclick="loadAvis(false)"><i class="fas fa-clock"></i> En
+                attente</button>
+              <button class="btn btn-outline btn-sm" onclick="loadAvis(true)"><i class="fas fa-check"></i>
+                Approuvés</button>
+              <button class="btn btn-primary" onclick="openModal('avis')"><i class="fas fa-plus"></i> Ajouter un
+                avis</button>
+            </div>
+          </div>
+          <div id="avis-list">
+            <div class="loading">
+              <div class="spinner"></div> Chargement…
+            </div>
+          </div>
+        </div>
+
+        <!-- ── RENDEZ-VOUS ───────────────────────────── -->
+        <div class="panel" id="panel-rendezvous">
+          <div class="panel-header">
+            <h1 class="panel-title">Rendez-vous <span id="rdv-count"></span></h1>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              <button class="btn btn-outline btn-sm" onclick="exportRdvCSV()" style="margin-right:.5rem"><i
+                  class="fas fa-file-export"></i> Exporter</button>
+              <button class="btn btn-outline btn-sm" onclick="loadRdv('en_attente')" id="btn-rdv-attente">
+                <i class="fas fa-clock"></i> En attente
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="loadRdv('confirme')" id="btn-rdv-confirme">
+                <i class="fas fa-check"></i> Confirmés
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="loadRdv('termine')" id="btn-rdv-termine">
+                <i class="fas fa-flag-checkered"></i> Terminés
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="loadRdv('annule')" id="btn-rdv-annule">
+                <i class="fas fa-times"></i> Annulés
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="loadRdv(null)" id="btn-rdv-all">
+                <i class="fas fa-list"></i> Tous
+              </button>
+            </div>
+          </div>
+          <div id="rdv-list">
+            <div class="loading">
+              <div class="spinner"></div> Chargement…
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SERVICES ────────────────────────────────────── -->
+        <div class="panel" id="panel-services-admin">
+          <div class="panel-header">
+            <h1 class="panel-title">Prestations & Tarifs <span>Configurez vos services</span></h1>
+            <button class="btn btn-primary" onclick="openModal_Service_new()"><i class="fas fa-plus"></i> Nouveau
+              service</button>
+          </div>
+          <div id="services-admin-list">
+            <div class="loading">
+              <div class="spinner"></div> Chargement…
+            </div>
+          </div>
+        </div>
+
+        <!-- ── PLANNING ────────────────────────────────────── -->
+        <div class="panel" id="panel-rdv-planning">
+          <div class="panel-header">
+            <h1 class="panel-title">Planning des Rendez-vous <span>Vue calendrier globale</span></h1>
+            <button class="btn btn-outline" onclick="loadPlanning()"><i class="fas fa-sync"></i> Actualiser</button>
+          </div>
+          <div id="calendar" style="margin-top:1rem"></div>
+        </div>
+
+        <!-- ── PARAMÈTRES ─────────────────────────────── -->
+        <div class="panel" id="panel-parametres">
+          <div class="panel-header">
+            <h1 class="panel-title">Paramètres <span>Configuration des cartes</span></h1>
+          </div>
+
+          <!-- ── CARTE PAR DÉFAUT ──────────────────────────────── -->
+          <div class="param-card" style="margin-bottom:1.5rem">
+            <div class="param-card-header" style="background:linear-gradient(135deg,var(--vert) 0%,var(--vert-c) 100%)">
+              <div class="param-card-icon">🗺️</div>
+              <div>
+                <h3 style="color:var(--or);font-size:1rem;margin:0">Carte affichée par défaut</h3>
+                <p style="color:rgba(255,255,255,.65);font-size:.8rem;margin:0">Choisissez quelle carte s'affiche en
+                  premier sur la page Contact</p>
+              </div>
+            </div>
+            <div style="padding:1.25rem 1.5rem">
+              <div id="default-map-status" style="margin-bottom:1rem">
+                <div class="loading">
+                  <div class="spinner"></div> Chargement…
+                </div>
+              </div>
+              <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+                <button class="btn btn-outline" id="btn-default-google" onclick="setDefaultMap('google')">
+                  <i class="fab fa-google" style="color:#4285F4"></i> Google Maps par défaut
+                </button>
+                <button class="btn btn-outline" id="btn-default-apple" onclick="setDefaultMap('apple')">
+                  <i class="fab fa-apple" style="color:#1c1c1e"></i> Apple Maps par défaut
+                </button>
+              </div>
+              <p style="font-size:.78rem;color:var(--gris-d);margin-top:.75rem">
+                <i class="fas fa-info-circle"></i>
+                Le visiteur peut toujours basculer manuellement entre les deux cartes. Ce réglage définit seulement
+                quelle carte s'affiche à l'ouverture de la page.
+              </p>
+            </div>
+          </div>
+
+
+          <!-- ── IFRAME GOOGLE PERSONNALISÉ ───────────────────────── -->
+          <div class="param-card" style="margin-bottom:1.5rem">
+            <div class="param-card-header" style="background:linear-gradient(135deg,#0f9d58 0%,#34a853 100%)">
+              <div class="param-card-icon" style="background:rgba(255,255,255,.15)">
+                <i class="fas fa-map-marked-alt" style="color:#fff;font-size:1.3rem"></i>
+              </div>
+              <div>
+                <h3 style="color:#fff;font-size:1rem;margin:0">Iframe Google Maps personnalisé</h3>
+                <p style="color:rgba(255,255,255,.7);font-size:.8rem;margin:0">Collez directement une URL d'embed depuis
+                  Google Maps</p>
+              </div>
+              <div style="margin-left:auto">
+                <span id="custom-iframe-badge" class="badge badge-warning">Non configuré</span>
+              </div>
+            </div>
+            <div style="padding:1.25rem 1.5rem">
+
+              <!-- Info -->
+              <div
+                style="display:flex;align-items:flex-start;gap:.6rem;padding:.75rem 1rem;background:rgba(52,168,83,.08);border:1px solid rgba(52,168,83,.25);border-radius:8px;margin-bottom:1.25rem">
+                <i class="fas fa-info-circle" style="color:#0f9d58;margin-top:.15rem"></i>
+                <div style="font-size:.84rem;color:#444">
+                  <strong>Comment obtenir l'URL d'embed ?</strong><br>
+                  Sur Google Maps → cliquez sur votre lieu → <strong>Partager</strong> → <strong>Intégrer une
+                    carte</strong> → copiez <em>uniquement l'URL</em> du champ <code>src="…"</code>.
+                </div>
+              </div>
+
+              <!-- Aperçu -->
+              <div id="custom-iframe-preview" style="display:none;margin-bottom:1.25rem">
+                <p style="font-size:.85rem;color:var(--gris-d);margin-bottom:.6rem"><i class="fas fa-eye"></i> Aperçu en
+                  direct :</p>
+                <div style="border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12)">
+                  <iframe id="custom-iframe-el" style="width:100%;height:220px;border:none;display:block" loading="lazy"
+                    title="Aperçu iframe personnalisé" referrerpolicy="no-referrer-when-downgrade" allowfullscreen>
+                  </iframe>
+                </div>
+              </div>
+
+              <!-- Champ URL -->
+              <div class="form-group">
+                <label class="form-label" for="custom-iframe-url">
+                  URL de l'iframe Google Maps
+                </label>
+                <div style="display:flex;gap:.75rem;align-items:flex-start;flex-wrap:wrap">
+                  <div style="flex:1;min-width:200px">
+                    <input type="url" id="custom-iframe-url" class="form-control"
+                      placeholder="https://www.google.com/maps/embed?pb=…" autocomplete="off" spellcheck="false">
+                  </div>
+                  <button class="btn" onclick="saveCustomIframe()" id="custom-iframe-save-btn"
+                    style="background:#0f9d58;color:#fff;white-space:nowrap">
+                    <i class="fas fa-save"></i> Enregistrer
+                  </button>
+                </div>
+                <p style="font-size:.78rem;color:var(--gris-d);margin-top:.5rem">
+                  <i class="fas fa-info-circle"></i>
+                  Si une URL est enregistrée ici, elle sera utilisée à la place de la clé API Google Maps.
+                </p>
+              </div>
+
+              <!-- Supprimer -->
+              <div id="custom-iframe-remove-zone"
+                style="display:none;margin-top:1rem;padding:.85rem 1rem;background:#FEF2F2;border-radius:8px;border-left:3px solid var(--danger)">
+                <p style="font-size:.84rem;color:#7f1d1d;margin:0 0 .6rem">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  Supprimer l'URL reviendra à utiliser la clé API (ou OpenStreetMap).
+                </p>
+                <button class="btn btn-danger btn-sm" onclick="removeCustomIframe()">
+                  <i class="fas fa-trash"></i> Supprimer l'iframe personnalisé
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── APPLE MAPS ─────────────────────────────────────── -->
+          <div class="param-card" style="margin-bottom:1.5rem">
+            <div class="param-card-header" style="background:linear-gradient(135deg,#1c1c1e 0%,#3a3a3c 100%)">
+              <div class="param-card-icon" style="background:rgba(255,255,255,.1)">
+                <i class="fab fa-apple" style="color:#fff;font-size:1.3rem"></i>
+              </div>
+              <div>
+                <h3 style="color:#fff;font-size:1rem;margin:0">Apple Maps</h3>
+                <p style="color:rgba(255,255,255,.6);font-size:.8rem;margin:0">Carte Apple intégrée — fonctionne sans
+                  clé API</p>
+              </div>
+              <div style="margin-left:auto">
+                <span class="badge"
+                  style="background:rgba(52,199,89,.2);color:#34c759;border:1px solid rgba(52,199,89,.3)">
+                  <i class="fas fa-check"></i> Actif
+                </span>
+              </div>
+            </div>
+            <div style="padding:1.25rem 1.5rem">
+
+              <!-- Statut -->
+              <div
+                style="display:flex;align-items:center;gap:.6rem;padding:.75rem 1rem;background:rgba(52,199,89,.08);border:1px solid rgba(52,199,89,.2);border-radius:8px;margin-bottom:1.25rem">
+                <i class="fab fa-apple" style="color:#1c1c1e;font-size:1.1rem"></i>
+                <div>
+                  <strong style="color:#1c1c1e;font-size:.9rem">Apple Maps est toujours disponible</strong>
+                  <p style="color:#555;font-size:.8rem;margin:.1rem 0 0">Aucune configuration requise. Le bouton Apple
+                    Maps est toujours visible sur la page Contact.</p>
+                </div>
+              </div>
+
+              <!-- Aperçu Apple Maps -->
+              <p style="font-size:.85rem;color:var(--gris-d);margin-bottom:.6rem"><i class="fas fa-eye"></i> Aperçu
+                Apple Maps :</p>
+              <div
+                style="border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12);margin-bottom:1.25rem">
+                <iframe style="width:100%;height:220px;border:none;display:block"
+                  src="https://maps.apple.com/?q=6.224345,1.193420&z=16&t=m&output=embed" loading="lazy"
+                  title="Aperçu Apple Maps" sandbox="allow-scripts allow-same-origin allow-popups">
+                </iframe>
+              </div>
+
+              <!-- Lien direct -->
+              <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
+                <a href="https://maps.apple.com/?q=6.224345,1.193420&z=16" target="_blank" rel="noopener"
+                  class="btn btn-outline" style="border-color:#1c1c1e;color:#1c1c1e">
+                  <i class="fab fa-apple"></i> Ouvrir Apple Maps
+                </a>
+                <p style="font-size:.8rem;color:var(--gris-d);margin:0">
+                  <i class="fas fa-info-circle"></i>
+                  L'embed Apple Maps est optimisé pour Safari et iOS. Sur Android/Chrome, un lien de secours s'affiche
+                  automatiquement.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CONFIGURATION CINETPAY (PAIEMENT) ────────────────── -->
+          <div class="param-card" style="margin-bottom:1.5rem">
+            <div class="param-card-header" style="background:linear-gradient(135deg,#e11d48 0%,#be123c 100%)">
+              <div class="param-card-icon" style="background:rgba(255,255,255,.15)">
+                <i class="fas fa-credit-card" style="color:#fff;font-size:1.2rem"></i>
+              </div>
+              <div>
+                <h3 style="color:#fff;font-size:1rem;margin:0">Configuration CinetPay</h3>
+                <p style="color:rgba(255,255,255,.7);font-size:.8rem;margin:0">Paramétrez vos identifiants pour les paiements d'acompte</p>
+              </div>
+              <div style="margin-left:auto">
+                <span id="cinetpay-badge" class="badge badge-warning">Non configuré</span>
+              </div>
+            </div>
+            <div style="padding:1.25rem 1.5rem">
+              <div style="display:flex;align-items:flex-start;gap:.6rem;padding:.75rem 1rem;background:rgba(225,29,72,.05);border:1px solid rgba(225,29,72,.2);border-radius:8px;margin-bottom:1.25rem">
+                <i class="fas fa-shield-alt" style="color:#e11d48;margin-top:.15rem"></i>
+                <div style="font-size:.84rem;color:#444">
+                  <strong>Identifiants requis :</strong><br>
+                  Récupérez votre <strong>API Key</strong> et <strong>Site ID</strong> depuis votre back-office CinetPay.
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex:2">
+                  <label class="form-label">CinetPay API Key</label>
+                  <input type="password" id="cinetpay-apikey" class="form-control" placeholder="Entrez votre API Key">
+                </div>
+                <div class="form-group" style="flex:1">
+                  <label class="form-label">Site ID</label>
+                  <input type="text" id="cinetpay-siteid" class="form-control" placeholder="Ex: 584xxx">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Mode d'exécution</label>
+                <select id="cinetpay-mode" class="form-control">
+                  <option value="TEST">TEST (Simulation sans argent réel)</option>
+                  <option value="PRODUCTION">PRODUCTION (Paiements réels activés)</option>
+                </select>
+              </div>
+
+              <div style="margin-top:1.25rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+                <button class="btn" onclick="saveCinetPaySettings()" id="cinetpay-save-btn" style="background:#e11d48;color:#fff">
+                  <i class="fas fa-save"></i> Enregistrer la configuration
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="removeCinetPaySettings()" id="cinetpay-remove-btn" style="display:none">
+                   <i class="fas fa-trash"></i> Réinitialiser
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CONFIGURATION FEDAPAY (ALTERNATIVE TOGO) ──────────── -->
+          <div class="param-card" style="margin-bottom:1.5rem">
+            <div class="param-card-header" style="background:linear-gradient(135deg,#6c5ce7 0%,#4834d4 100%)">
+              <div class="param-card-icon" style="background:rgba(255,255,255,.15)">
+                <i class="fas fa-wallet" style="color:#fff;font-size:1.2rem"></i>
+              </div>
+              <div>
+                <h3 style="color:#fff;font-size:1rem;margin:0">Configuration FedaPay</h3>
+                <p style="color:rgba(255,255,255,.7);font-size:.8rem;margin:0">Alternative recommandée pour le Togo (T-Money/Flooz)</p>
+              </div>
+              <div style="margin-left:auto">
+                <span id="fedapay-badge" class="badge badge-warning">Non configuré</span>
+              </div>
+            </div>
+            <div style="padding:1.25rem 1.5rem">
+              <div style="display:flex;align-items:flex-start;gap:.6rem;padding:.75rem 1rem;background:rgba(108,92,231,.05);border:1px solid rgba(108,92,231,.2);border-radius:8px;margin-bottom:1.25rem">
+                <i class="fas fa-info-circle" style="color:#6c5ce7;margin-top:.15rem"></i>
+                <div style="font-size:.84rem;color:#444">
+                  <strong>Recommandé :</strong> FedaPay est souvent plus rapide à valider que CinetPay au Togo.
+                  Récupérez votre <strong>Secret Key</strong> sur <a href="https://fedapay.com" target="_blank" style="color:#6c5ce7;font-weight:600">fedapay.com</a>.
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">FedaPay Secret Key (Test ou Live)</label>
+                <input type="password" id="fedapay-apikey" class="form-control" placeholder="sk_live_...">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Mode d'exécution</label>
+                <select id="fedapay-mode" class="form-control">
+                  <option value="test">TEST (Sandbox - Simulation)</option>
+                  <option value="live">LIVE (Production - Argent réel)</option>
+                </select>
+              </div>
+
+              <div style="margin-top:1.25rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+                <button class="btn" onclick="saveFedaPaySettings()" id="fedapay-save-btn" style="background:#6c5ce7;color:#fff">
+                  <i class="fas fa-check-circle"></i> Activer FedaPay
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="removeFedaPaySettings()" id="fedapay-remove-btn" style="display:none">
+                   <i class="fas fa-trash"></i> Réinitialiser
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CONFIGURATION KKIAPAY (ALTERNATIVE 2) ──────────────── -->
+          <div class="param-card" style="margin-bottom:1.5rem">
+            <div class="param-card-header" style="background:linear-gradient(135deg,#e67e22 0%,#d35400 100%)">
+              <div class="param-card-icon" style="background:rgba(255,255,255,.15)">
+                <i class="fas fa-money-check-alt" style="color:#fff;font-size:1.2rem"></i>
+              </div>
+              <div>
+                <h3 style="color:#fff;font-size:1rem;margin:0">Configuration KKiaPay</h3>
+                <p style="color:rgba(255,255,255,.7);font-size:.8rem;margin:0">Solution moderne par Widget (Togo & Bénin)</p>
+              </div>
+              <div style="margin-left:auto">
+                <span id="kkiapay-badge" class="badge badge-warning">Non configuré</span>
+              </div>
+            </div>
+            <div style="padding:1.25rem 1.5rem">
+              <div class="form-group">
+                <label class="form-label">KKiaPay Public Key</label>
+                <input type="text" id="kkiapay-publickey" class="form-control" placeholder="Entrez votre Public Key">
+              </div>
+
+              <div class="form-group">
+                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+                  <input type="checkbox" id="kkiapay-sandbox" checked style="width:16px;height:16px">
+                  <span class="form-label" style="margin:0">Utiliser le mode Sandbox (Test)</span>
+                </label>
+              </div>
+
+              <div style="margin-top:1.25rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+                <button class="btn" onclick="saveKKiaPaySettings()" id="kkiapay-save-btn" style="background:#e67e22;color:#fff">
+                  <i class="fas fa-save"></i> Enregistrer KKiaPay
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="removeKKiaPaySettings()" id="kkiapay-remove-btn" style="display:none">
+                   <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CONFIGURATION PAYGATE GLOBAL (ALTERNATIVE 3) ──────── -->
+          <div class="param-card" style="margin-bottom:1.5rem">
+            <div class="param-card-header" style="background:linear-gradient(135deg,#27ae60 0%,#2ecc71 100%)">
+              <div class="param-card-icon" style="background:rgba(255,255,255,.15)">
+                <i class="fas fa-globe" style="color:#fff;font-size:1.2rem"></i>
+              </div>
+              <div>
+                <h3 style="color:#fff;font-size:1rem;margin:0">Configuration Paygate Global</h3>
+                <p style="color:rgba(255,255,255,.7);font-size:.8rem;margin:0">Le leader local (Redirection sécurisée)</p>
+              </div>
+              <div style="margin-left:auto">
+                <span id="paygate-badge" class="badge badge-warning">Non configuré</span>
+              </div>
+            </div>
+            <div style="padding:1.25rem 1.5rem">
+              <div class="form-group">
+                <label class="form-label">Paygate Global API Key (Token)</label>
+                <div style="position:relative">
+                  <input type="password" id="paygate-apikey" class="form-control" placeholder="Entrez votre Token API">
+                  <button onclick="togglePassword('paygate-apikey')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#999;cursor:pointer">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div style="margin-top:1.25rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+                <button class="btn" onclick="savePaygateSettings()" id="paygate-save-btn" style="background:#27ae60;color:#fff">
+                  <i class="fas fa-save"></i> Activer Paygate
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="removePaygateSettings()" id="paygate-remove-btn" style="display:none">
+                   <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+ 
+          <!-- ── LICENCE DROITS D'AUTEUR (TOGO) ────────────────────── -->
+          <div class="param-card" style="margin-bottom:1.5rem">
+            <div class="param-card-header" style="background:linear-gradient(135deg,#0c3320 0%,#1b6b45 100%)">
+              <div class="param-card-icon" style="background:rgba(255,255,255,.15)">
+                <i class="fas fa-gavel" style="color:#fff;font-size:1.2rem"></i>
+              </div>
+              <div>
+                <h3 style="color:#fff;font-size:1rem;margin:0">Licence Droits d'Auteur (Togo)</h3>
+                <p style="color:rgba(255,255,255,.7);font-size:.8rem;margin:0">Gérez le texte légal affiché sur vos pages confidentalité et mentions</p>
+              </div>
+              <div style="margin-left:auto">
+                <span id="license-badge" class="badge badge-warning">Non défini</span>
+              </div>
+            </div>
+            <div style="padding:1.25rem 1.5rem">
+               <div style="display:flex;align-items:flex-start;gap:.6rem;padding:.75rem 1rem;background:rgba(12,51,32,.05);border:1px solid rgba(12,51,32,.2);border-radius:8px;margin-bottom:1.25rem">
+                <i class="fas fa-info-circle" style="color:var(--vert);margin-top:.15rem"></i>
+                <div style="font-size:.84rem;color:#444">
+                  Ce texte est conforme à la <strong>Loi n° 91-12 du Togo</strong>. Il sera injecté automatiquement au bas de vos pages légales.
+                </div>
+              </div>
+ 
+              <div class="form-group">
+                <label class="form-label">Contenu de la Licence (HTML supporté)</label>
+                <textarea id="license-text" class="form-control" rows="8" placeholder="Copiez ici le contenu de votre fichier LICENCE_DROITS_AUTEUR_TOGO.html..."></textarea>
+              </div>
+ 
+               <div style="margin-top:2rem; padding-top:1.5rem; border-top: 1px dashed #ddd;">
+                <label class="form-label">Document PDF Officiel (Optionnel)</label>
+                <div class="upload-zone" id="license-pdf-zone" onclick="$('license-pdf-file').click()" style="height: 100px;">
+                  <input type="file" id="license-pdf-file" accept="application/pdf" style="display:none" onchange="uploadLicensePDF(this)">
+                  <i class="fas fa-file-pdf" style="font-size: 1.5rem; color: var(--vert);"></i>
+                  <p id="license-pdf-status">Cliquez pour uploader le PDF original<br><small>Format PDF uniquement</small></p>
+                </div>
+                <div id="license-pdf-preview" style="display:none; margin-top:1rem; align-items:center; gap:1rem; padding:.75rem; background:#f0f7f4; border-radius:8px;">
+                  <i class="fas fa-check-circle" style="color:#22c55e"></i>
+                  <span id="license-pdf-name" style="font-size:.85rem; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">document.pdf</span>
+                  <button class="btn btn-outline btn-sm" onclick="removeLicensePDF()" style="color:var(--danger); border-color:var(--danger);">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+ 
+              <div style="margin-top:1.5rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+                <button class="btn" onclick="saveLicenseSettings()" id="license-save-btn" style="background:var(--vert);color:#fff">
+                  <i class="fas fa-save"></i> Enregistrer la licence
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="removeLicenseSettings()" id="license-remove-btn" style="display:none">
+                   <i class="fas fa-trash"></i> Réinitialiser tout
+                </button>
+              </div>
+            </div>
+          </div>
+ 
+          <!-- ── APERÇU TOGGLE (simulation page Contact) ────────── -->
+          <div class="param-card">
+            <div class="param-card-header" style="background:linear-gradient(135deg,#6B21A8 0%,#9333EA 100%)">
+              <div class="param-card-icon" style="background:rgba(255,255,255,.15)">
+                <i class="fas fa-desktop" style="color:#fff;font-size:1.2rem"></i>
+              </div>
+              <div>
+                <h3 style="color:#fff;font-size:1rem;margin:0">Simulation — Page Contact</h3>
+                <p style="color:rgba(255,255,255,.65);font-size:.8rem;margin:0">Prévisualisation du toggle tel que le
+                  voit le visiteur</p>
+              </div>
+            </div>
+            <div style="padding:1.25rem 1.5rem">
+              <!-- Toggle simulé -->
+              <div style="display:flex;justify-content:center;margin-bottom:1.25rem">
+                <div
+                  style="display:flex;background:#fff;border-radius:999px;box-shadow:0 2px 12px rgba(0,0,0,.12);padding:.3rem;gap:.25rem">
+                  <button id="sim-btn-google" onclick="simSwitch('google')"
+                    style="display:flex;align-items:center;gap:.5rem;padding:.5rem 1.1rem;border-radius:999px;font-size:.88rem;font-weight:700;cursor:pointer;border:none;transition:all .22s;background:var(--vert);color:var(--or)">
+                    <i class="fab fa-google"></i> Google Maps
+                  </button>
+                  <button id="sim-btn-apple" onclick="simSwitch('apple')"
+                    style="display:flex;align-items:center;gap:.5rem;padding:.5rem 1.1rem;border-radius:999px;font-size:.88rem;font-weight:700;cursor:pointer;border:none;transition:all .22s;background:transparent;color:#555">
+                    <i class="fab fa-apple"></i> Apple Maps
+                  </button>
+                </div>
+              </div>
+              <div id="sim-map" style="border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12)">
+                <div class="loading">
+                  <div class="spinner"></div> Chargement de l'aperçu…
+                </div>
+              </div>
+              <p style="font-size:.78rem;color:var(--gris-d);margin-top:.75rem;text-align:center">
+                <i class="fas fa-mouse-pointer"></i> Cliquez sur les boutons ci-dessus pour tester le basculement
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── HISTORIQUE ─────────────────────────────────── -->
+        <div class="panel" id="panel-historique">
+          <div class="panel-header">
+            <h1 class="panel-title">Historique <span id="historique-count"></span></h1>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+              <select id="historique-filtre" onchange="loadHistorique()"
+                style="padding:.4rem .75rem;border-radius:8px;border:1px solid #ddd;font-size:.85rem;color:var(--vert)">
+                <option value="">Toutes les actions</option>
+                <option value="rdv">Rendez-vous</option>
+                <option value="blog">Blog</option>
+                <option value="galerie">Galerie</option>
+                <option value="avis">Avis</option>
+                <option value="service">Prestations</option>
+                <option value="connexion">Connexion</option>
+              </select>
+              <button class="btn btn-outline btn-sm" onclick="exportHistorique()"><i class="fas fa-download"></i>
+                Exporter</button>
+              <button class="btn btn-danger btn-sm" onclick="clearHistorique()"><i class="fas fa-trash"></i>
+                Vider</button>
+            </div>
+          </div>
+          <div id="historique-list"></div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ MODALS ═══════════════════════════════ -->
+
+  <!-- Modal Blog -->
+  <div class="modal-overlay" id="modal-blog">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-blog-title">Nouvel article</span>
+        <div class="modal-close" onclick="closeModal('blog')"><i class="fas fa-times"></i></div>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="blog-edit-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Titre *</label>
+            <input type="text" class="form-control" id="blog-titre" placeholder="Titre de l'article">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catégorie</label>
+            <select class="form-control" id="blog-cat">
+              <option value="Entretien">Entretien</option>
+              <option value="Création">Création</option>
+              <option value="Coloration">Coloration</option>
+              <option value="Conseil">Conseil</option>
+              <option value="Actualité">Actualité</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Extrait (résumé court)</label>
+          <textarea class="form-control" id="blog-extrait" rows="2"
+            placeholder="Résumé affiché sur la liste…"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contenu complet</label>
+          <textarea class="form-control" id="blog-contenu" rows="6" placeholder="Corps de l'article…"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Photo de couverture</label>
+          <div class="upload-zone" id="blog-upload-zone">
+            <input type="file" id="blog-photo-file" accept="image/*">
+            <i class="fas fa-image"></i>
+            <p>Cliquez ou glissez une image ici<br><small>JPG, PNG, WebP — max 5 Mo</small></p>
+          </div>
+          <div class="upload-preview" id="blog-preview"></div>
+          <div class="upload-progress" id="blog-progress" style="display:none">
+            <div class="upload-progress-bar" id="blog-progress-bar"></div>
+          </div>
+          <input type="hidden" id="blog-photo-url">
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+            <input type="checkbox" id="blog-publie" style="width:16px;height:16px">
+            <span class="form-label" style="margin:0">Publier immédiatement</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('blog')">Annuler</button>
+        <button class="btn btn-primary" id="blog-save-btn" onclick="saveBlog()"><i class="fas fa-save"></i>
+          Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Galerie -->
+  <div class="modal-overlay" id="modal-galerie">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Ajouter des photos</span>
+        <div class="modal-close" onclick="closeModal('galerie')"><i class="fas fa-times"></i></div>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="galerie-edit-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Titre</label>
+            <input type="text" class="form-control" id="galerie-titre" placeholder="Ex: Création locks micro">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catégorie</label>
+            <select class="form-control" id="galerie-cat">
+              <option value="creation">Création</option>
+              <option value="entretien">Entretien</option>
+              <option value="avant-apres">Avant/Après</option>
+              <option value="equipe">Équipe</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Photos (sélection multiple possible)</label>
+          <div class="upload-zone" id="galerie-upload-zone">
+            <input type="file" id="galerie-photo-files" accept="image/*" multiple>
+            <i class="fas fa-images"></i>
+            <p>Cliquez ou glissez vos photos ici<br><small>JPG, PNG, WebP, AVIF — max 10 Mo chacune</small></p>
+          </div>
+          <div class="upload-preview" id="galerie-preview"></div>
+          <div class="upload-progress" id="galerie-progress" style="display:none">
+            <div class="upload-progress-bar" id="galerie-progress-bar"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+            <input type="checkbox" id="galerie-publie" checked style="width:16px;height:16px">
+            <span class="form-label" style="margin:0">Publier immédiatement</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('galerie')">Annuler</button>
+        <button class="btn btn-primary" onclick="saveGalerie()"><i class="fas fa-upload"></i> Uploader</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Vidéo -->
+  <div class="modal-overlay" id="modal-videos">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-video-title">Ajouter une vidéo</span>
+        <div class="modal-close" onclick="closeModal('videos')"><i class="fas fa-times"></i></div>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="video-edit-id">
+        <div class="form-group">
+          <label class="form-label">Titre *</label>
+          <input type="text" class="form-control" id="video-titre" placeholder="Titre de la vidéo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" id="video-desc" rows="2" placeholder="Courte description…"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Source de la vidéo *</label>
+          <div style="display:flex;gap:1.5rem;margin-bottom:.75rem">
+            <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
+              <input type="radio" name="video-source" value="file" checked onchange="updateVideoSourceUI()" style="width:16px;height:16px"> Fichier (MP4)
+            </label>
+            <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
+              <input type="radio" name="video-source" value="link" onchange="updateVideoSourceUI()" style="width:16px;height:16px"> Lien (TikTok, Insta, YT)
+            </label>
+          </div>
+
+          <!-- Zone Fichier -->
+          <div id="video-source-file-zone">
+            <div class="upload-zone">
+              <input type="file" id="video-file" accept="video/*">
+              <i class="fas fa-video"></i>
+              <p>Cliquez ou glissez votre vidéo<br><small>MP4, MOV, WebM — max 100 Mo</small></p>
+            </div>
+            <div class="upload-preview" id="video-preview"></div>
+          </div>
+
+          <!-- Zone Lien -->
+          <div id="video-source-link-zone" style="display:none">
+            <input type="url" class="form-control" id="video-external-url" placeholder="https://www.tiktok.com/@user/video/..." oninput="autoFetchYoutubeThumb()">
+            <p style="font-size:.78rem;color:var(--gris-d);margin-top:.4rem">Collez le lien TikTok, Instagram ou YouTube.</p>
+          </div>
+
+          <div class="upload-progress" id="video-progress" style="display:none">
+            <div class="upload-progress-bar" id="video-progress-bar"></div>
+          </div>
+          <input type="hidden" id="video-url">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Miniature (optionnel)</label>
+          <div class="upload-zone">
+            <input type="file" id="video-thumb-file" accept="image/*">
+            <i class="fas fa-image"></i>
+            <p>Image miniature<br><small>JPG, PNG — max 2 Mo</small></p>
+          </div>
+          <div class="upload-preview" id="video-thumb-preview"></div>
+          <input type="hidden" id="video-thumb-url">
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+            <input type="checkbox" id="video-publie" checked style="width:16px;height:16px">
+            <span class="form-label" style="margin:0">Publier immédiatement</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('videos')">Annuler</button>
+        <button class="btn btn-primary" onclick="saveVideo()"><i class="fas fa-save"></i> Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL AVIS ─────────────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-avis">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Ajouter un avis client</span>
+        <button class="modal-close" onclick="closeModal('avis')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Nom du client *</label>
+          <input type="text" id="avis-admin-nom" class="form-control" placeholder="Ex : Afi Koffi" maxlength="80">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ville / Quartier</label>
+          <input type="text" id="avis-admin-localite" class="form-control" placeholder="Ex : Lomé, Adidogomé…"
+            maxlength="60">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Note (étoiles) *</label>
+          <select id="avis-admin-etoiles" class="form-control">
+            <option value="5">★★★★★ — 5/5 Excellent</option>
+            <option value="4">★★★★☆ — 4/5 Très bien</option>
+            <option value="3">★★★☆☆ — 3/5 Bien</option>
+            <option value="2">★★☆☆☆ — 2/5 Passable</option>
+            <option value="1">★☆☆☆☆ — 1/5 Mauvais</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Témoignage *</label>
+          <textarea id="avis-admin-texte" class="form-control" rows="4" placeholder="Texte du témoignage client…"
+            maxlength="600"></textarea>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:.75rem">
+          <input type="checkbox" id="avis-admin-approuve" checked style="width:18px;height:18px;cursor:pointer">
+          <label for="avis-admin-approuve" style="cursor:pointer;font-weight:600;color:var(--vert)">Publier
+            immédiatement (approuvé)</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('avis')">Annuler</button>
+        <button class="btn btn-primary" id="avis-admin-save-btn" onclick="saveAvisAdmin()"><i class="fas fa-save"></i>
+          Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL SERVICES ────────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-services">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-services-title">Nouvelle prestation</span>
+        <button class="modal-close" onclick="closeModal('services')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="service-edit-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nom du service *</label>
+            <input type="text" id="service-nom" class="form-control" placeholder="Ex: Entretien Locks">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catégorie</label>
+            <input type="text" id="service-cat" class="form-control" placeholder="Ex: Entretien, Création…">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Prix (FCFA)</label>
+            <input type="text" id="service-prix" class="form-control" placeholder="Ex: 8 000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ordre d'affichage</label>
+            <input type="number" id="service-ordre" class="form-control" value="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+            <input type="checkbox" id="service-actif" checked style="width:16px;height:16px">
+            <span class="form-label" style="margin:0">Service actif (visible par les clients)</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('services')">Annuler</button>
+        <button class="btn btn-primary" id="service-save-btn" onclick="saveService()"><i class="fas fa-save"></i>
+          Enregistrer</button>
+      </div>
+    </div>
+  </div>
+  <!-- Overlay -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+
+  <!-- Drawer latéral -->
+  <nav class="mobile-drawer" id="mobile-drawer" aria-label="Navigation mobile">
+    <div class="drawer-header">
+      <div class="drawer-logo"><img src="assets/admin-logo.jpg" alt="Miralocks Logo"></div>
+      <div>
+        <div class="drawer-title">Miralocks</div>
+        <div class="drawer-subtitle">Administration</div>
+      </div>
+    </div>
+
+    <div class="drawer-section">Tableau de bord</div>
+    <button class="drawer-item active" data-panel="dashboard">
+      <i class="fas fa-chart-pie"></i> Vue d'ensemble
+    </button>
+    <button class="drawer-item" data-panel="google-analytics">
+      <i class="fas fa-chart-line" style="color:#4285F4"></i> Stats Google
+    </button>
+
+    <div class="drawer-section">Contenu</div>
+    <button class="drawer-item" data-panel="blog">
+      <i class="fas fa-newspaper"></i> Articles Blog
+    </button>
+    <button class="drawer-item" data-panel="galerie">
+      <i class="fas fa-images"></i> Galerie Photos
+    </button>
+    <button class="drawer-item" data-panel="videos">
+      <i class="fas fa-video"></i> Vidéos
+    </button>
+    <button class="drawer-item" data-panel="avis">
+      <i class="fas fa-star"></i> Avis Clients
+      <span class="drawer-badge" id="drawer-avis-badge" style="display:none">0</span>
+    </button>
+    <button class="drawer-item" data-panel="rdv-planning">
+      <i class="fas fa-calendar-alt"></i> Planning
+    </button>
+    <button class="drawer-item" data-panel="rendezvous">
+      <i class="fas fa-calendar-check"></i> Rendez-vous
+      <span class="drawer-badge" id="drawer-rdv-badge" style="display:none">0</span>
+    </button>
+
+    <div class="drawer-section">Configuration</div>
+    <button class="drawer-item" data-panel="historique">
+      <i class="fas fa-history"></i> Historique
+    </button>
+    <button class="drawer-item" data-panel="parametres">
+      <i class="fas fa-cog"></i> Paramètres
+    </button>
+
+    <div style="margin-top:auto;padding:1.25rem;border-top:1px solid #f0f0f0">
+      <button class="btn btn-outline" style="width:100%;font-size:.85rem"
+        onclick="closeDrawer();setTimeout(()=>sb.signOut().then(()=>location.reload()),200)">
+        <i class="fas fa-sign-out-alt"></i> Déconnexion
+      </button>
+    </div>
+  </nav>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <!-- ═══════════════════ SCRIPTS ══════════════════════════════ -->
+  <script src="js/supabase.js?v=a3e9174d"></script>
+  <script src="js/supabase2.js?v=a88ac9d9"></script>
+  <script src="js/admin-charts.js?v=9ca4480e"></script>
+  <!-- Core admin : auth, nav, thème, vidéos -->
+  <script src="js/admin.js?v=f187ea2e"></script>
+  <!-- Modules métier -->
+  <script src="js/admin-rdv.js?v=5ee097d3"></script>
+  <script src="js/admin-galerie.js?v=aa39a847"></script>
+  <script src="js/admin-avis.js?v=1707564b"></script>
+  <script src="js/admin-settings.js?v=c08ef8f5"></script>
+  <script src="js/admin-services.js?v=87c034aa"></script>
+</body>
+
+</html>
+

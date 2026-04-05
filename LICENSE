@@ -1,28 +1,23 @@
-BSD 3-Clause License
+/* ============================================================
+   Miralocks - LICENCE OFFICIELLE - Version 6.0
+   Localisation : Lomé, TOGO
+   ============================================================ */
 
-Copyright (c) 2026, geoffroy-hub
+Ce projet (code source, design, base de données) est la propriété exclusive 
+de l'INSTITUT MIRALOCKS et de son auteur Mr. ABOTCHI K. Geoffroy.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+PROTECTION JURIDIQUE :
+- Protégé par la Loi n° 91-12 du 10 juin 1991 (Togo).
+- Protégé par la Convention de Berne pour la Protection des Œuvres.
+- Droit au nom et à l'intégrité de l'œuvre (Droits Moraux).
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
+INTERDICTIONS :
+- Toute reproduction totale ou partielle sans accord écrit de l'Auteur.
+- Revente ou distribution du système à des tiers.
+- Modification non autorisée du code source original.
 
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+LITIGES :
+Compétence exclusive attribuée aux TRIBUNAUX DE LOMÉ, TOGO.
 
-3. Neither the name of the copyright holder nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Consultez le document détaillé : LICENCE_DROITS_AUTEUR_TOGO.html
+============================================================ */
