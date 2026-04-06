@@ -149,20 +149,37 @@
           </div>
           <div id="dash-pending" style="margin-top:1.5rem"></div>
 
-          <!-- Visites du site (Rapport Looker Studio) -->
+          <!-- Visites du site (Supabase) -->
           <div class="dash-card" style="padding:1.5rem;cursor:default;margin-top:2rem">
-            <h3 style="margin:0 0 1rem 0;font-size:1rem;color:var(--vert);display:flex;align-items:center;gap:.5rem">
-              <i class="fas fa-chart-line"></i> Statistiques de fréquentation
-            </h3>
-            <div style="padding:0; overflow:hidden; border-radius:12px; background:#fff; box-shadow:var(--shadow); min-height:450px; display:flex; align-items:center; justify-content:center">
-               <iframe class="stats-iframe" width="100%" height="450" data-src="https://lookerstudio.google.com/embed/reporting/100d9356-28c3-4364-b120-337e0c08e027/page/z6BuF" frameborder="0" style="border:0; display:none" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
-               <div class="stats-placeholder" style="text-align:center; padding:2rem">
-                 <i class="fas fa-chart-line" style="font-size:3rem; color:#eee; margin-bottom:1rem; display:block"></i>
-                 <button class="btn btn-sm btn-outline" onclick="loadStatsIframes(this.parentElement.parentElement)">
-                   <i class="fas fa-play"></i> Charger les statistiques
-                 </button>
-               </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+              <h3 style="margin:0;font-size:1rem;color:var(--vert);display:flex;align-items:center;gap:.5rem">
+                <i class="fas fa-chart-area"></i> Fréquentation du site
+              </h3>
+              <button class="btn btn-sm btn-outline" onclick="showPanel('google-analytics')" style="font-size:11px">
+                <i class="fas fa-expand"></i> Voir tout
+              </button>
             </div>
+            <!-- Mini KPI -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1rem" id="dash-visites-kpi">
+              <div style="background:var(--bg-card,#f8f8f8);border-radius:8px;padding:.75rem;text-align:center">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--vert)" id="dv-aujourd-hui">—</div>
+                <div style="font-size:.7rem;color:#888">Aujourd'hui</div>
+              </div>
+              <div style="background:var(--bg-card,#f8f8f8);border-radius:8px;padding:.75rem;text-align:center">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--or)" id="dv-semaine">—</div>
+                <div style="font-size:.7rem;color:#888">Cette semaine</div>
+              </div>
+              <div style="background:var(--bg-card,#f8f8f8);border-radius:8px;padding:.75rem;text-align:center">
+                <div style="font-size:1.5rem;font-weight:700;color:#4a90d9" id="dv-mois">—</div>
+                <div style="font-size:.7rem;color:#888">Ce mois</div>
+              </div>
+              <div style="background:var(--bg-card,#f8f8f8);border-radius:8px;padding:.75rem;text-align:center">
+                <div style="font-size:1.5rem;font-weight:700;color:#9b59b6" id="dv-total">—</div>
+                <div style="font-size:.7rem;color:#888">Total</div>
+              </div>
+            </div>
+            <!-- Mini graphique -->
+            <div style="position:relative;height:160px"><canvas id="dashVisitesChart"></canvas></div>
           </div>
 
           <!-- Graphique RDV par semaine -->
@@ -206,22 +223,56 @@
         <!-- ── GOOGLE ANALYTICS ───────────────────────────── -->
         <div class="panel" id="panel-google-analytics">
           <div class="panel-header">
-            <h1 class="panel-title">Statistiques Google Analytics <span>Rapport Looker Studio</span></h1>
+            <h1 class="panel-title">Statistiques de Fréquentation <span>Données en temps réel</span></h1>
             <div style="display:flex;gap:.5rem">
-               <button class="btn btn-outline btn-sm" onclick="window.open('https://analytics.google.com/', '_blank')">
-                 <i class="fas fa-external-link-alt"></i> Ouvrir Google Analytics
-               </button>
+              <button class="btn btn-outline btn-sm" onclick="loadVisitesPanel()">
+                <i class="fas fa-sync"></i> Actualiser
+              </button>
             </div>
           </div>
-          <div class="dash-card" style="padding:0; overflow:hidden; border:none; background:transparent; box-shadow:none; min-height:600px; display:flex; align-items:center; justify-content:center">
-            <iframe class="stats-iframe" width="100%" height="750" data-src="https://lookerstudio.google.com/embed/reporting/100d9356-28c3-4364-b120-337e0c08e027/page/z6BuF" frameborder="0" style="border:0; border-radius:12px; background:#fff; box-shadow:var(--shadow); display:none" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
-            <div class="stats-placeholder" style="text-align:center; padding:5rem; background:#fff; width:100%; border-radius:12px; box-shadow:var(--shadow)">
-                 <i class="fas fa-chart-bar" style="font-size:5rem; color:#eee; margin-bottom:1.5rem; display:block"></i>
-                 <h2 style="margin-bottom:1.5rem; color:var(--vert)">Rapport de Fréquentation</h2>
-                 <button class="btn btn-primary" onclick="loadStatsIframes(this.parentElement.parentElement)">
-                   <i class="fas fa-eye"></i> Afficher le rapport détaillé
-                 </button>
-                 <p style="margin-top:1rem; font-size:.8rem; color:#999">Le chargement peut prendre quelques secondes selon votre connexion.</p>
+
+          <!-- KPI Cards -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem" id="visites-kpi">
+            <div class="dash-card" style="padding:1.25rem;cursor:default;text-align:center">
+              <div style="font-size:2rem;font-weight:700;color:var(--vert)" id="v-aujourd-hui">—</div>
+              <div style="font-size:.8rem;color:#888;margin-top:.25rem"><i class="fas fa-calendar-day"></i> Aujourd'hui</div>
+            </div>
+            <div class="dash-card" style="padding:1.25rem;cursor:default;text-align:center">
+              <div style="font-size:2rem;font-weight:700;color:var(--or)" id="v-semaine">—</div>
+              <div style="font-size:.8rem;color:#888;margin-top:.25rem"><i class="fas fa-calendar-week"></i> Cette semaine</div>
+            </div>
+            <div class="dash-card" style="padding:1.25rem;cursor:default;text-align:center">
+              <div style="font-size:2rem;font-weight:700;color:#4a90d9" id="v-mois">—</div>
+              <div style="font-size:.8rem;color:#888;margin-top:.25rem"><i class="fas fa-calendar-alt"></i> Ce mois</div>
+            </div>
+            <div class="dash-card" style="padding:1.25rem;cursor:default;text-align:center">
+              <div style="font-size:2rem;font-weight:700;color:#9b59b6" id="v-total">—</div>
+              <div style="font-size:.8rem;color:#888;margin-top:.25rem"><i class="fas fa-infinity"></i> Total</div>
+            </div>
+          </div>
+
+          <!-- Graphique visites par jour -->
+          <div class="dash-card" style="padding:1.5rem;cursor:default;margin-bottom:1.5rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+              <h3 style="margin:0;font-size:1rem;color:var(--vert);display:flex;align-items:center;gap:.5rem">
+                <i class="fas fa-chart-area"></i> Visites par jour
+              </h3>
+              <div style="display:flex;gap:.5rem">
+                <button class="btn btn-sm btn-outline" id="vbtn-7" onclick="changeVisitesDays(7)" style="font-size:11px">7 jours</button>
+                <button class="btn btn-sm" id="vbtn-30" onclick="changeVisitesDays(30)" style="font-size:11px;background:var(--vert);color:#fff">30 jours</button>
+                <button class="btn btn-sm btn-outline" id="vbtn-90" onclick="changeVisitesDays(90)" style="font-size:11px">90 jours</button>
+              </div>
+            </div>
+            <div style="position:relative;height:240px"><canvas id="visitesLineChart"></canvas></div>
+          </div>
+
+          <!-- Top pages du mois -->
+          <div class="dash-card" style="padding:1.5rem;cursor:default">
+            <h3 style="margin:0 0 1rem 0;font-size:1rem;color:var(--vert);display:flex;align-items:center;gap:.5rem">
+              <i class="fas fa-fire"></i> Pages les plus visitées (ce mois)
+            </h3>
+            <div id="visites-top-pages">
+              <div class="loading"><div class="spinner"></div> Chargement…</div>
             </div>
           </div>
         </div>
@@ -1158,6 +1209,181 @@
   <script src="js/admin-avis.js?v=1707564b"></script>
   <script src="js/admin-settings.js?v=c08ef8f5"></script>
   <script src="js/admin-services.js?v=87c034aa"></script>
+
+  <!-- ── STATISTIQUES VISITES ─────────────────────────── -->
+  <script>
+  let _visitesChart = null;
+  let _visitesLineChart = null;
+  let _visitesDays = 30;
+
+  async function loadVisitesDashboard() {
+    try {
+      const stats = await sb.visites.stats();
+      // Mettre à jour le mini-dashboard (panel principal)
+      const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setEl('dv-aujourd-hui', stats.jour);
+      setEl('dv-semaine', stats.semaine);
+      setEl('dv-mois', stats.mois);
+      setEl('dv-total', stats.total);
+      // Charger le mini graphique du dashboard
+      const byDay = await sb.visites.byDay(14);
+      renderDashVisitesChart(byDay);
+    } catch(e) { console.warn('Visites dash:', e); }
+  }
+
+  function renderDashVisitesChart(byDay) {
+    const ctx = document.getElementById('dashVisitesChart');
+    if (!ctx || !window.Chart) return;
+    if (_visitesChart) _visitesChart.destroy();
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const gc = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+    const tc = isDark ? '#a8c4b0' : '#666';
+    _visitesChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: byDay.labels,
+        datasets: [{
+          label: 'Visites',
+          data: byDay.data,
+          fill: true,
+          backgroundColor: 'rgba(12,51,32,0.12)',
+          borderColor: '#0C3320',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#0C3320',
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: gc }, ticks: { color: tc, font: { size: 9 }, maxRotation: 45 } },
+          y: { beginAtZero: true, ticks: { stepSize: 1, color: tc }, grid: { color: gc } }
+        }
+      }
+    });
+  }
+
+  async function loadVisitesPanel() {
+    try {
+      // KPI
+      const stats = await sb.visites.stats();
+      const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setEl('v-aujourd-hui', stats.jour);
+      setEl('v-semaine', stats.semaine);
+      setEl('v-mois', stats.mois);
+      setEl('v-total', stats.total);
+
+      // Graphique par jour
+      const byDay = await sb.visites.byDay(_visitesDays);
+      renderVisitesLineChart(byDay);
+
+      // Top pages
+      const tp = document.getElementById('visites-top-pages');
+      if (tp) {
+        if (!stats.topPages || stats.topPages.length === 0) {
+          tp.innerHTML = '<p style="color:#aaa;text-align:center;padding:1rem">Aucune donnée disponible</p>';
+        } else {
+          const max = stats.topPages[0][1] || 1;
+          tp.innerHTML = stats.topPages.map(([page, count]) => `
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem">
+              <div style="flex:0 0 140px;font-size:.8rem;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${page}">${page}</div>
+              <div style="flex:1;background:#eee;border-radius:999px;height:8px;overflow:hidden">
+                <div style="height:100%;border-radius:999px;background:var(--vert);width:${Math.round(count/max*100)}%;transition:width .5s"></div>
+              </div>
+              <div style="flex:0 0 40px;text-align:right;font-size:.8rem;font-weight:600;color:var(--vert)">${count}</div>
+            </div>
+          `).join('');
+        }
+      }
+    } catch(e) { console.warn('loadVisitesPanel:', e); }
+  }
+
+  function renderVisitesLineChart(byDay) {
+    const ctx = document.getElementById('visitesLineChart');
+    if (!ctx || !window.Chart) return;
+    if (_visitesLineChart) _visitesLineChart.destroy();
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const gc = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+    const tc = isDark ? '#a8c4b0' : '#555';
+    _visitesLineChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: byDay.labels,
+        datasets: [{
+          label: 'Visites/jour',
+          data: byDay.data,
+          fill: true,
+          backgroundColor: 'rgba(12,51,32,0.1)',
+          borderColor: '#0C3320',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#0C3320',
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { title: i => i[0].label, label: i => i.raw + ' visite(s)' } }
+        },
+        scales: {
+          x: { grid: { color: gc }, ticks: { color: tc, font: { size: 10 }, maxRotation: 45 } },
+          y: { beginAtZero: true, ticks: { stepSize: 1, color: tc }, grid: { color: gc } }
+        }
+      }
+    });
+  }
+
+  function changeVisitesDays(n) {
+    _visitesDays = n;
+    ['7','30','90'].forEach(v => {
+      const btn = document.getElementById('vbtn-' + v);
+      if (!btn) return;
+      if (v == n) {
+        btn.style.background = 'var(--vert)'; btn.style.color = '#fff';
+        btn.classList.remove('btn-outline');
+      } else {
+        btn.style.background = ''; btn.style.color = '';
+        btn.classList.add('btn-outline');
+      }
+    });
+    sb.visites.byDay(n).then(renderVisitesLineChart).catch(console.warn);
+  }
+
+  // showPanel helper (utilisé par le bouton "Voir tout" dans le dashboard)
+  window.showPanel = window.showPanel || function(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const panel = document.getElementById('panel-' + name);
+    if (panel) panel.classList.add('active');
+    const nav = document.querySelector(`.nav-item[data-panel="${name}"]`);
+    if (nav) nav.classList.add('active');
+    if (name === 'google-analytics') setTimeout(loadVisitesPanel, 100);
+  };
+
+  // Charger le mini-widget dans le dashboard au démarrage
+  // Attendre que sb et la session soient prêts
+  function _waitAndLoadVisites() {
+    if (typeof sb === 'undefined' || typeof sb.visites === 'undefined') {
+      setTimeout(_waitAndLoadVisites, 300);
+      return;
+    }
+    // Attendre que l'utilisateur soit connecté (session valide)
+    sb.getValidSession().then(s => {
+      if (s && s.token) {
+        loadVisitesDashboard();
+      } else {
+        setTimeout(_waitAndLoadVisites, 1000);
+      }
+    }).catch(() => setTimeout(_waitAndLoadVisites, 1000));
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(_waitAndLoadVisites, 2000);
+  });
+  </script>
 </body>
 
 </html>

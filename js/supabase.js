@@ -351,12 +351,10 @@ const sb = {
     },
     async create(data) { return sb._post('galerie_videos', data); },
     async update(id, data) { return sb._patch('galerie_videos', id, data); },
-    async delete(id, videoUrl, thumbUrl) {
-      if (videoUrl) {
-        if (window.sb2) await sb2.deleteFile(videoUrl).catch(() => { });
-        else await sb.deleteFile(videoUrl).catch(() => { });
-      }
-      if (thumbUrl) await sb.deleteFile(thumbUrl).catch(() => { });
+    async delete(id) {
+      // ⚠️ Le nettoyage des fichiers storage (sb2 pour vidéo, sb pour thumb)
+      // doit être fait par l'appelant AVANT cet appel.
+      // supabase.js ne doit pas dépendre de supabase2.js.
       return sb._delete('galerie_videos', id);
     },
     async togglePublish(id, current) {
@@ -579,17 +577,23 @@ sb.visites = {
 
     const now = new Date();
 
-    /* Aujourd'hui minuit UTC */
-    const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
-    /* Début de la semaine (lundi) */
+    /* Utiliser l'heure locale pour les calculs de dates, puis convertir proprement */
+    const pad = n => String(n).padStart(2, '0');
+    /* Formate une date locale en ISO sans décalage UTC */
+    const fmtLocal = d => {
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T00:00:00.000Z`;
+    };
+
+    /* Aujourd'hui minuit heure locale */
+    const todayStart = new Date(now);
+    /* Début de la semaine (lundi) heure locale */
     const weekStart = new Date(now);
     const day = weekStart.getDay();
     weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1));
-    weekStart.setHours(0, 0, 0, 0);
-    /* Début du mois */
+    /* Début du mois heure locale */
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const fmt = d => d.toISOString();
+    const fmt = d => fmtLocal(d);
 
     const [rDay, rWeek, rMonth, rTotal, rPages] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/visites?select=id&created_at=gte.${fmt(todayStart)}`, { headers }),
@@ -636,24 +640,31 @@ sb.visites.byDay = async function (days = 30) {
   };
   const since = new Date();
   since.setDate(since.getDate() - days);
-  since.setHours(0, 0, 0, 0);
+
+  /* Formate en YYYY-MM-DD selon l'heure locale */
+  const localKey = d => {
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  };
+  const sinceISO = `${localKey(since)}T00:00:00.000Z`;
 
   const r = await fetch(
-    `${SUPABASE_URL}/rest/v1/visites?select=created_at&created_at=gte.${since.toISOString()}&order=created_at.asc`,
+    `${SUPABASE_URL}/rest/v1/visites?select=created_at&created_at=gte.${sinceISO}&order=created_at.asc`,
     { headers }
   );
   const rows = await r.json();
 
-  /* Construire un tableau jour par jour */
+  /* Construire un tableau jour par jour en heure locale */
   const map = {};
   for (let i = 0; i < days; i++) {
     const d = new Date(since);
     d.setDate(d.getDate() + i);
-    const key = d.toISOString().split('T')[0];
-    map[key] = 0;
+    map[localKey(d)] = 0;
   }
   (Array.isArray(rows) ? rows : []).forEach(v => {
-    const key = v.created_at.split('T')[0];
+    /* Convertir created_at UTC → heure locale pour grouper correctement */
+    const d = new Date(v.created_at);
+    const key = localKey(d);
     if (key in map) map[key]++;
   });
 

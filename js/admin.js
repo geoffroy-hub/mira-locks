@@ -205,12 +205,32 @@
 
         loadDashboard();
         loadBlog();
+        setTimeout(() => { if (typeof loadVisitesDashboard === 'function') loadVisitesDashboard(); }, 500);
       }, 180);
     }
 
     // Auto-login si session valide (attend le rafraîchissement si nécessaire)
     window.addEventListener('DOMContentLoaded', async () => {
       initTheme();
+
+      /* ── Listeners vidéo (DOM requis) ── */
+      const vFileEl = document.getElementById('video-file');
+      if (vFileEl) vFileEl.addEventListener('change', function () {
+        const prev = document.getElementById('video-preview');
+        if (prev && this.files[0]) {
+          const url = URL.createObjectURL(this.files[0]);
+          prev.innerHTML = `<div class="upload-preview-item"><video src="${url}" style="width:100%;height:80px;object-fit:cover;border-radius:8px"></video></div>`;
+        }
+      });
+      const vThumbEl = document.getElementById('video-thumb-file');
+      if (vThumbEl) vThumbEl.addEventListener('change', function () {
+        const prev = document.getElementById('video-thumb-preview');
+        if (prev && this.files[0]) {
+          const url = URL.createObjectURL(this.files[0]);
+          prev.innerHTML = `<div class="upload-preview-item"><img src="${url}"></div>`;
+        }
+      });
+
       try {
         const s = await sb.getValidSession();
         if (s) showAdmin();
@@ -270,11 +290,11 @@
         const load = {
           blog: loadBlog, galerie: loadGalerie, videos: loadVideos,
           avis: () => loadAvis(false), 
-          dashboard: () => { loadDashboard(); loadStatsIframes($('panel-dashboard')); },
+          dashboard: () => { loadDashboard(); setTimeout(() => { if (typeof loadVisitesDashboard === 'function') loadVisitesDashboard(); }, 500); },
           parametres: loadParametres, rendezvous: () => loadRdv('en_attente'),
           'rdv-planning': loadPlanning, 'services-admin': loadServicesAdmin,
           historique: loadHistorique, 
-          'google-analytics': () => loadStatsIframes($('panel-google-analytics'))
+          'google-analytics': () => { if (typeof loadVisitesPanel === 'function') loadVisitesPanel(); }
         };
         load[panel]?.();
       });
@@ -328,11 +348,11 @@
           const load = {
             blog: loadBlog, galerie: loadGalerie, videos: loadVideos,
             avis: () => loadAvis(false), 
-            dashboard: () => { loadDashboard(); loadStatsIframes($('panel-dashboard')); },
+            dashboard: () => { loadDashboard(); setTimeout(() => { if (typeof loadVisitesDashboard === 'function') loadVisitesDashboard(); }, 500); },
             parametres: loadParametres, rendezvous: () => loadRdv('en_attente'),
             'rdv-planning': loadPlanning, 'services-admin': loadServicesAdmin,
             historique: loadHistorique, 
-            'google-analytics': () => loadStatsIframes($('panel-google-analytics'))
+            'google-analytics': () => { if (typeof loadVisitesPanel === 'function') loadVisitesPanel(); }
           };
           load[panel]?.();
         }
@@ -383,20 +403,7 @@
       } catch (e) { el.innerHTML = `<div style="color:var(--danger);padding:1rem">Erreur : ${e.message}</div>`; }
     }
 
-    $('video-file').addEventListener('change', function () {
-      const prev = $('video-preview');
-      if (this.files[0]) {
-        const url = URL.createObjectURL(this.files[0]);
-        prev.innerHTML = `<div class="upload-preview-item"><video src="${url}" style="width:100%;height:80px;object-fit:cover;border-radius:8px"></video></div>`;
-      }
-    });
-    $('video-thumb-file').addEventListener('change', function () {
-      const prev = $('video-thumb-preview');
-      if (this.files[0]) {
-        const url = URL.createObjectURL(this.files[0]);
-        prev.innerHTML = `<div class="upload-preview-item"><img src="${url}"></div>`;
-      }
-    });
+
 
     function updateVideoSourceUI() {
       const type = document.querySelector('input[name="video-source"]:checked').value;
@@ -432,6 +439,9 @@
       document.querySelector('input[name="video-source"][value="file"]').checked = true;
       updateVideoSourceUI();
       document.getElementById('modal-video-title').textContent = "Ajouter une vidéo";
+      // Ouvrir le modal
+      const modal = document.getElementById('modal-videos');
+      if (modal) modal.classList.add('open');
     }
 
     async function saveVideo() {
@@ -500,14 +510,17 @@
     async function deleteVideo(id, vUrl, tUrl) {
       if (!confirm('Supprimer cette vidéo ?')) return;
       
-      // Suppression sur l'instance Supabase 2 si c'est un fichier hébergé
-      if (vUrl && vUrl.includes(window.SUPABASE2_URL)) {
-        try {
-          await sb2.deleteFile(vUrl);
-        } catch (e) { console.warn("Erreur suppression sb2:", e); }
+      // Suppression du fichier vidéo sur l'instance Supabase 2 (sb2)
+      if (vUrl && window.SUPABASE2_URL && vUrl.includes(window.SUPABASE2_URL)) {
+        try { await sb2.deleteFile(vUrl); } catch (e) { console.warn('Erreur suppression sb2:', e); }
       }
-      
-      await sb.videos.delete(id, vUrl, tUrl);
+      // Suppression de la miniature sur l'instance principale (sb)
+      if (tUrl) {
+        try { await sb.deleteFile(tUrl); } catch (e) { console.warn('Erreur suppression thumb:', e); }
+      }
+
+      // sb.videos.delete ne gère plus le storage — uniquement la suppression en base
+      await sb.videos.delete(id);
       toast('Vidéo supprimée', 'warning');
       loadVideos();
       loadDashboard();
